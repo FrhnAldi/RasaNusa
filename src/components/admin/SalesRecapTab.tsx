@@ -7,11 +7,20 @@ interface Props {
   transactions: Transaction[];
 }
 
-const METHOD_META: Record<PaymentMethod, { label: string; icon: typeof Banknote; color: string }> = {
-  tunai: { label: 'Tunai', icon: Banknote, color: 'text-emerald-600 bg-emerald-50' },
-  qris: { label: 'QRIS', icon: QrCode, color: 'text-sky-600 bg-sky-50' },
-  kartu: { label: 'Kartu', icon: CreditCard, color: 'text-violet-600 bg-violet-50' },
-  ewallet: { label: 'E-Wallet', icon: Wallet, color: 'text-amber-600 bg-amber-50' },
+// Basilico luxury design system — matches the rest of the admin & customer dashboards.
+const BLACK = '#070707';
+const CREAM = '#F3EAD9';
+const GOLD = '#D9A35F';
+const BURNT = '#C97A2B';
+const GRADIENT = `linear-gradient(135deg, ${GOLD}, ${BURNT})`;
+const MUTED = 'rgba(243,234,217,0.55)';
+const SERIF = "'Playfair Display', serif";
+
+const METHOD_META: Record<PaymentMethod, { label: string; icon: typeof Banknote; color: string; bg: string }> = {
+  tunai: { label: 'Tunai', icon: Banknote, color: GOLD, bg: 'rgba(217,163,95,0.14)' },
+  qris: { label: 'QRIS', icon: QrCode, color: '#2FA3B3', bg: 'rgba(29,107,118,0.16)' },
+  kartu: { label: 'Kartu', icon: CreditCard, color: '#B98BDE', bg: 'rgba(155,135,222,0.14)' },
+  ewallet: { label: 'E-Wallet', icon: Wallet, color: '#E8836C', bg: 'rgba(196,67,43,0.16)' },
 };
 
 export default function SalesRecapTab({ transactions }: Props) {
@@ -35,22 +44,10 @@ export default function SalesRecapTab({ transactions }: Props) {
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-2xl bg-white border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500">Total Pendapatan</p>
-          <p className="text-lg font-bold text-emerald-600">{formatIDR(totalRevenue)}</p>
-        </div>
-        <div className="rounded-2xl bg-white border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500">Total Item Terjual</p>
-          <p className="text-lg font-bold text-zinc-900">{totalItems} item</p>
-        </div>
-        <div className="rounded-2xl bg-white border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500">Jumlah Transaksi</p>
-          <p className="text-lg font-bold text-zinc-900">{transactions.length}</p>
-        </div>
-        <div className="rounded-2xl bg-white border border-zinc-200 p-4">
-          <p className="text-xs text-zinc-500">Estimasi Keuntungan</p>
-          <p className="text-lg font-bold text-emerald-600">{formatIDR(totalRevenue * 0.4)}</p>
-        </div>
+        <StatCard label="Total Pendapatan" value={formatIDR(totalRevenue)} accent={GOLD} />
+        <StatCard label="Total Item Terjual" value={`${totalItems} item`} accent={CREAM} />
+        <StatCard label="Jumlah Transaksi" value={`${transactions.length}`} accent={CREAM} />
+        <StatCard label="Estimasi Keuntungan" value={formatIDR(totalRevenue * 0.4)} accent={GOLD} />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -69,32 +66,50 @@ export default function SalesRecapTab({ transactions }: Props) {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden">
-        <div className="px-5 py-3 border-b border-zinc-100 flex items-center gap-2">
-          <Receipt size={15} className="text-zinc-500" />
-          <h3 className="text-sm font-semibold text-zinc-900">Riwayat Transaksi</h3>
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ backgroundColor: 'rgba(243,234,217,0.03)', border: '1px solid rgba(243,234,217,0.1)' }}
+      >
+        <div
+          className="px-5 py-3 flex items-center gap-2"
+          style={{ borderBottom: '1px solid rgba(243,234,217,0.08)' }}
+        >
+          <Receipt size={15} style={{ color: GOLD }} />
+          <h3 className="text-sm font-semibold" style={{ color: CREAM, fontFamily: SERIF }}>
+            Riwayat Transaksi
+          </h3>
         </div>
         {filtered.length === 0 ? (
-          <div className="py-14 text-center text-sm text-zinc-400">Belum ada transaksi.</div>
+          <div className="py-14 text-center text-sm font-light" style={{ color: 'rgba(243,234,217,0.35)' }}>
+            Belum ada transaksi.
+          </div>
         ) : (
-          <div className="divide-y divide-zinc-100 max-h-[420px] overflow-y-auto">
+          <div className="divide-y divide-[rgba(243,234,217,0.08)] max-h-[420px] overflow-y-auto">
             {filtered.map((t) => {
               const meta = METHOD_META[t.paymentMethod];
               const Icon = meta.icon;
               return (
-                <div key={t.id} className="px-5 py-3 flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${meta.color}`}>
-                    <Icon size={14} />
+                <div
+                  key={t.id}
+                  className="px-5 py-3 flex items-start gap-3 transition-colors duration-300 hover:bg-white/[0.02]"
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: meta.bg }}
+                  >
+                    <Icon size={14} style={{ color: meta.color }} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex justify-between items-baseline gap-2">
-                      <p className="text-sm font-medium text-zinc-900 truncate">
+                      <p className="text-sm font-medium truncate" style={{ color: CREAM }}>
                         {t.items.map((i) => `${i.name} x${i.quantity}`).join(', ')}
                       </p>
-                      <p className="text-sm font-bold text-emerald-600 flex-shrink-0">{formatIDR(t.total)}</p>
+                      <p className="text-sm font-bold flex-shrink-0" style={{ color: GOLD }}>
+                        {formatIDR(t.total)}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[11px] text-zinc-400">
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[11px] font-light" style={{ color: MUTED }}>
                         {new Date(t.timestamp).toLocaleString('id-ID', {
                           day: '2-digit',
                           month: 'short',
@@ -102,10 +117,12 @@ export default function SalesRecapTab({ transactions }: Props) {
                           minute: '2-digit',
                         })}
                       </span>
-                      <span className="text-[11px] text-zinc-300">·</span>
-                      <span className="text-[11px] text-zinc-400">{meta.label}</span>
-                      <span className="text-[11px] text-zinc-300">·</span>
-                      <span className="text-[11px] text-zinc-400">Kasir: {t.cashierName}</span>
+                      <span className="text-[11px]" style={{ color: 'rgba(243,234,217,0.25)' }}>·</span>
+                      <span className="text-[11px] font-light" style={{ color: MUTED }}>{meta.label}</span>
+                      <span className="text-[11px]" style={{ color: 'rgba(243,234,217,0.25)' }}>·</span>
+                      <span className="text-[11px] font-light" style={{ color: MUTED }}>
+                        Kasir: {t.cashierName}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -118,15 +135,32 @@ export default function SalesRecapTab({ transactions }: Props) {
   );
 }
 
+function StatCard({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <div
+      className="rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5"
+      style={{ backgroundColor: 'rgba(243,234,217,0.03)', border: '1px solid rgba(243,234,217,0.1)' }}
+    >
+      <p className="text-xs font-light" style={{ color: MUTED }}>
+        {label}
+      </p>
+      <p className="text-lg font-bold" style={{ color: accent, fontFamily: SERIF }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function FilterChip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
     <button
       onClick={onClick}
-      className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+      className="text-xs font-medium px-3 py-1.5 rounded-full transition-all duration-300"
+      style={
         active
-          ? 'bg-zinc-900 text-white border-zinc-900'
-          : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400'
-      }`}
+          ? { background: GRADIENT, color: BLACK }
+          : { backgroundColor: 'rgba(243,234,217,0.05)', color: MUTED, border: '1px solid rgba(243,234,217,0.12)' }
+      }
     >
       {label}
     </button>
