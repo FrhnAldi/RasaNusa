@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Clock3, Download, MessageSquareText, Tag } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock3, Download, MessageSquareText, QrCode, Tag } from 'lucide-react';
 import { formatIDR } from '../../data/products';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -44,6 +44,15 @@ function formatCountdown(totalSeconds: number) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+/**
+ * Two-stage post-checkout modal:
+ *  1. "review"  — order summary, itemized bill, and totals with a CTA to
+ *                 either pay (QRIS) or finish (other methods).
+ *  2. "payment" — QRIS code + countdown only. Kept intentionally sparse so
+ *                 it never needs to compete for vertical space with the
+ *                 order review, which was the root cause of the QR code
+ *                 getting clipped on short viewports.
+ */
 export default function OrderSuccessModal({
   orderId,
   items,
@@ -60,11 +69,14 @@ export default function OrderSuccessModal({
   const { colors } = useTheme();
   const { ink: BLACK, cream: CREAM, creamAlpha, inkAlpha } = colors;
   const MUTED = creamAlpha(0.55);
+  const isQris = paymentMethod === 'qris';
+
+  const [stage, setStage] = useState<'review' | 'payment'>('review');
   const [secondsLeft, setSecondsLeft] = useState(QRIS_DURATION_SECONDS);
   const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
-    if (paymentMethod !== 'qris') return;
+    if (stage !== 'payment' || !isQris) return;
     const id = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
@@ -75,9 +87,9 @@ export default function OrderSuccessModal({
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [paymentMethod]);
+  }, [stage, isQris]);
 
-  const qrisExpired = paymentMethod === 'qris' && secondsLeft === 0;
+  const qrisExpired = isQris && stage === 'payment' && secondsLeft === 0;
 
   const handlePrintReceipt = async () => {
     setIsPrinting(true);
@@ -112,6 +124,10 @@ export default function OrderSuccessModal({
           0% { transform: scale(0.6); opacity: 0.6; }
           100% { transform: scale(1.9); opacity: 0; }
         }
+        @keyframes os-slide-in {
+          0% { transform: translateX(24px); opacity: 0; }
+          100% { transform: translateX(0); opacity: 1; }
+        }
       `}</style>
       <div
         className="absolute inset-0"
@@ -134,134 +150,233 @@ export default function OrderSuccessModal({
           style={{ background: 'radial-gradient(circle, rgba(217,163,95,0.16), transparent 70%)' }}
         />
 
-        {/* Header */}
-        <div className="relative flex flex-col items-center text-center px-6 pt-6 sm:pt-8 pb-3 sm:pb-4 flex-shrink-0">
-          <div className="relative mb-3 sm:mb-4 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
-            <span
-              className="absolute inset-0 rounded-full"
-              style={{ border: `2px solid ${GOLD}`, animation: 'os-ring 1.6s ease-out infinite' }}
-            />
-            <div
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(217,163,95,0.14)', border: '1px solid rgba(217,163,95,0.3)' }}
-            >
-              <CheckCircle2 size={24} className="sm:hidden" style={{ color: GOLD }} />
-              <CheckCircle2 size={28} className="hidden sm:block" style={{ color: GOLD }} />
-            </div>
-          </div>
+        {stage === 'review' ? (
+          <>
+            {/* Header */}
+            <div className="relative flex flex-col items-center text-center px-6 pt-6 sm:pt-8 pb-3 sm:pb-4 flex-shrink-0">
+              <div className="relative mb-3 sm:mb-4 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
+                <span
+                  className="absolute inset-0 rounded-full"
+                  style={{ border: `2px solid ${GOLD}`, animation: 'os-ring 1.6s ease-out infinite' }}
+                />
+                <div
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(217,163,95,0.14)', border: '1px solid rgba(217,163,95,0.3)' }}
+                >
+                  <CheckCircle2 size={24} className="sm:hidden" style={{ color: GOLD }} />
+                  <CheckCircle2 size={28} className="hidden sm:block" style={{ color: GOLD }} />
+                </div>
+              </div>
 
-          <h3 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 600, fontSize: 20, color: CREAM }}>
-            Pesanan Berhasil
-          </h3>
-          <p className="text-xs mt-1.5 font-light leading-relaxed" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
-            Pesanan <span style={{ color: GOLD, fontWeight: 600 }}>{orderId}</span> sudah kami terima dan sedang
-            disiapkan dengan penuh perhatian.
-          </p>
-          <span
-            className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-3 py-1 rounded-full"
-            style={{ color: GOLD, backgroundColor: 'rgba(217,163,95,0.14)' }}
-          >
-            <Clock3 size={11} /> Menunggu Konfirmasi
-          </span>
-          <p className="text-[11px] mt-2 font-light hidden sm:block" style={{ color: creamAlpha(0.4), fontFamily: 'Inter, sans-serif' }}>
-            Pantau perkembangan status pesanan Anda secara real-time di bagian Riwayat Pesanan.
-          </p>
-        </div>
-
-        {/* Scrollable review body */}
-        <div className="relative flex-1 min-h-0 overflow-y-auto px-6 pt-1">
-          <div className="flex items-center justify-between mb-2.5">
-            <p
-              className="text-[11px] font-medium uppercase tracking-[0.16em]"
-              style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}
-            >
-              Tinjau Pesanan
-            </p>
-            <span className="text-[11px] font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
-              {items.reduce((sum, i) => sum + i.quantity, 0)} item
-            </span>
-          </div>
-
-          <ul className="flex flex-col gap-2 mb-4">
-            {items.map((item, idx) => (
-              <li
-                key={`${item.name}-${idx}`}
-                className="rounded-xl px-3.5 py-2.5"
-                style={{ backgroundColor: creamAlpha(0.04), border: `1px solid ${creamAlpha(0.08)}` }}
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 600, fontSize: 20, color: CREAM }}>
+                Pesanan Berhasil
+              </h3>
+              <p className="text-xs mt-1.5 font-light leading-relaxed" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                Pesanan <span style={{ color: GOLD, fontWeight: 600 }}>{orderId}</span> sudah kami terima dan sedang
+                disiapkan dengan penuh perhatian.
+              </p>
+              <span
+                className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-3 py-1 rounded-full"
+                style={{ color: GOLD, backgroundColor: 'rgba(217,163,95,0.14)' }}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex items-center gap-2">
+                <Clock3 size={11} /> Menunggu Konfirmasi
+              </span>
+            </div>
+
+            {/* Scrollable review body */}
+            <div className="relative flex-1 min-h-0 overflow-y-auto px-6 pt-1">
+              <div className="flex items-center justify-between mb-2.5">
+                <p
+                  className="text-[11px] font-medium uppercase tracking-[0.16em]"
+                  style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}
+                >
+                  Tinjau Pesanan
+                </p>
+                <span className="text-[11px] font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                  {items.reduce((sum, i) => sum + i.quantity, 0)} item
+                </span>
+              </div>
+
+              <ul className="flex flex-col gap-2 mb-4">
+                {items.map((item, idx) => (
+                  <li
+                    key={`${item.name}-${idx}`}
+                    className="rounded-xl px-3.5 py-2.5"
+                    style={{ backgroundColor: creamAlpha(0.04), border: `1px solid ${creamAlpha(0.08)}` }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex items-center gap-2">
+                        <span
+                          className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold"
+                          style={{ backgroundColor: 'rgba(217,163,95,0.16)', color: GOLD }}
+                        >
+                          {item.quantity}
+                        </span>
+                        <span className="text-sm truncate" style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}>
+                          {item.name}
+                        </span>
+                      </div>
+                      <span className="text-xs font-light flex-shrink-0" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                        {formatIDR(item.price * item.quantity)}
+                      </span>
+                    </div>
+                    {item.note && (
+                      <div className="flex items-start gap-1.5 mt-1.5 pl-7">
+                        <MessageSquareText size={11} className="flex-shrink-0 mt-0.5" style={{ color: GOLD, opacity: 0.8 }} />
+                        <span className="text-[11px] font-light italic" style={{ color: creamAlpha(0.55), fontFamily: 'Inter, sans-serif' }}>
+                          {item.note}
+                        </span>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+
+              {(orderType || tableNumber || paymentMethod) && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {orderType && (
                     <span
-                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold"
-                      style={{ backgroundColor: 'rgba(217,163,95,0.16)', color: GOLD }}
+                      className="text-[11px] font-medium px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: creamAlpha(0.06), color: MUTED }}
                     >
-                      {item.quantity}
+                      {orderType === 'dine-in' ? 'Makan di Tempat' : 'Bawa Pulang'}
                     </span>
-                    <span className="text-sm truncate" style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}>
-                      {item.name}
+                  )}
+                  {tableNumber && (
+                    <span
+                      className="text-[11px] font-medium px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: creamAlpha(0.06), color: MUTED }}
+                    >
+                      Meja {tableNumber}
                     </span>
-                  </div>
-                  <span className="text-xs font-light flex-shrink-0" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
-                    {formatIDR(item.price * item.quantity)}
+                  )}
+                  {paymentMethod && (
+                    <span
+                      className="text-[11px] font-medium px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: creamAlpha(0.06), color: MUTED }}
+                    >
+                      {PAYMENT_LABELS[paymentMethod] ?? paymentMethod}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {promoCode && discount > 0 && (
+                <div
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 mb-3"
+                  style={{ backgroundColor: 'rgba(217,163,95,0.1)', border: '1px solid rgba(217,163,95,0.3)' }}
+                >
+                  <Tag size={12} style={{ color: GOLD }} />
+                  <span className="text-xs font-medium" style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}>
+                    Promo <span style={{ color: GOLD, fontFamily: 'monospace' }}>{promoCode}</span> diterapkan
                   </span>
                 </div>
-                {item.note && (
-                  <div className="flex items-start gap-1.5 mt-1.5 pl-7">
-                    <MessageSquareText size={11} className="flex-shrink-0 mt-0.5" style={{ color: GOLD, opacity: 0.8 }} />
-                    <span className="text-[11px] font-light italic" style={{ color: creamAlpha(0.55), fontFamily: 'Inter, sans-serif' }}>
-                      {item.note}
-                    </span>
+              )}
+
+              <div className="flex flex-col gap-1.5 pb-2">
+                <div className="flex justify-between text-xs font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                  <span>Subtotal</span>
+                  <span>{formatIDR(subtotal)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-xs font-light" style={{ color: '#7BC98A', fontFamily: 'Inter, sans-serif' }}>
+                    <span>Diskon Promo</span>
+                    <span>-{formatIDR(discount)}</span>
                   </div>
                 )}
-              </li>
-            ))}
-          </ul>
-
-          {(orderType || tableNumber || paymentMethod) && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {orderType && (
-                <span
-                  className="text-[11px] font-medium px-2.5 py-1 rounded-full"
-                  style={{ backgroundColor: creamAlpha(0.06), color: MUTED }}
-                >
-                  {orderType === 'dine-in' ? 'Makan di Tempat' : 'Bawa Pulang'}
-                </span>
-              )}
-              {tableNumber && (
-                <span
-                  className="text-[11px] font-medium px-2.5 py-1 rounded-full"
-                  style={{ backgroundColor: creamAlpha(0.06), color: MUTED }}
-                >
-                  Meja {tableNumber}
-                </span>
-              )}
-              {paymentMethod && (
-                <span
-                  className="text-[11px] font-medium px-2.5 py-1 rounded-full"
-                  style={{ backgroundColor: creamAlpha(0.06), color: MUTED }}
-                >
-                  {PAYMENT_LABELS[paymentMethod] ?? paymentMethod}
-                </span>
-              )}
+                <div className="flex justify-between text-xs font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                  <span>Pajak (10%)</span>
+                  <span>{formatIDR(tax)}</span>
+                </div>
+              </div>
             </div>
-          )}
 
-          {paymentMethod === 'qris' && (
-            <div
-              className="flex flex-col items-center rounded-2xl px-4 py-3.5 sm:py-5 mb-4"
-              style={{
-                backgroundColor: creamAlpha(0.04),
-                border: `1px solid ${qrisExpired ? 'rgba(196,67,43,0.35)' : 'rgba(217,163,95,0.25)'}`,
-              }}
-            >
-              <p
-                className="text-[11px] font-medium uppercase tracking-[0.16em] mb-2.5 sm:mb-3"
-                style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}
-              >
-                Scan untuk Bayar
-              </p>
+            {/* Footer total + CTA */}
+            <div className="relative px-6 pt-3 sm:pt-4 pb-4 sm:pb-6 flex-shrink-0" style={{ borderTop: `1px solid ${creamAlpha(0.08)}` }}>
               <div
-                className="rounded-xl p-2 sm:p-2.5 transition-opacity duration-500"
+                className="w-full rounded-2xl px-4 py-3 sm:py-3.5 flex items-center justify-between mb-3 sm:mb-4"
+                style={{ backgroundColor: creamAlpha(0.04), border: `1px solid ${creamAlpha(0.1)}`, backdropFilter: 'blur(6px)' }}
+              >
+                <span className="text-xs font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                  Total Pembayaran
+                </span>
+                <span
+                  className="text-base font-semibold"
+                  style={{
+                    background: GRADIENT,
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    color: 'transparent',
+                  }}
+                >
+                  {formatIDR(total)}
+                </span>
+              </div>
+
+              <p className="text-[11px] mb-3 sm:mb-4 font-light text-center hidden sm:block" style={{ color: creamAlpha(0.4), fontFamily: 'Inter, sans-serif' }}>
+                {isQris
+                  ? 'Lanjutkan untuk menampilkan kode QRIS dan menyelesaikan pembayaran.'
+                  : 'Tunjukkan halaman ini ke kasir untuk konfirmasi pembayaran.'}
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrintReceipt}
+                  disabled={isPrinting}
+                  className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 font-semibold text-xs py-3 sm:py-3.5 rounded-xl transition-all duration-300 hover:bg-white/5 disabled:opacity-60"
+                  style={{ border: `1px solid ${creamAlpha(0.18)}`, color: CREAM }}
+                  aria-label="Cetak struk sebagai PDF"
+                >
+                  <Download size={14} />
+                  <span className="hidden sm:inline">{isPrinting ? 'Menyiapkan...' : 'Cetak Struk'}</span>
+                </button>
+                {isQris ? (
+                  <button
+                    onClick={() => setStage('payment')}
+                    className="flex-1 flex items-center justify-center gap-1.5 font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
+                    style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
+                  >
+                    <QrCode size={16} />
+                    Lanjutkan Pembayaran
+                  </button>
+                ) : (
+                  <button
+                    onClick={onClose}
+                    className="flex-1 font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
+                    style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
+                  >
+                    Selesai
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="relative flex flex-col" style={{ animation: 'os-slide-in 350ms cubic-bezier(0.22, 1, 0.36, 1)' }}>
+            {/* Header */}
+            <div className="relative flex items-center gap-3 px-6 pt-6 sm:pt-7 pb-2 flex-shrink-0">
+              <button
+                onClick={() => setStage('review')}
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
+                style={{ color: MUTED }}
+                aria-label="Kembali ke ringkasan pesanan"
+              >
+                <ArrowLeft size={16} />
+              </button>
+              <div className="min-w-0">
+                <h3 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 600, fontSize: 17, color: CREAM }}>
+                  Pembayaran QRIS
+                </h3>
+                <p className="text-[11px] font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                  Pesanan <span style={{ color: GOLD, fontWeight: 600 }}>{orderId}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* QR block — the only focus of this stage, so it always has room to breathe */}
+            <div className="relative flex flex-col items-center px-6 pt-4 pb-2">
+              <div
+                className="rounded-xl p-3 sm:p-4 transition-opacity duration-500"
                 style={{
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0 0 24px rgba(217,163,95,0.15)',
@@ -271,21 +386,21 @@ export default function OrderSuccessModal({
                 <img
                   src={`${import.meta.env.BASE_URL}qris.png`}
                   alt="Kode QRIS"
-                  className="w-32 h-32 sm:w-44 sm:h-44 object-contain block"
+                  className="w-40 h-40 sm:w-52 sm:h-52 object-contain block"
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 mt-3 sm:mt-3.5">
-                <Clock3 size={13} style={{ color: qrisExpired ? '#E8836C' : GOLD }} />
+              <div className="flex items-center gap-1.5 mt-4">
+                <Clock3 size={14} style={{ color: qrisExpired ? '#E8836C' : GOLD }} />
                 <span
-                  className="text-xs font-semibold"
+                  className="text-sm font-semibold"
                   style={{ color: qrisExpired ? '#E8836C' : GOLD, fontFamily: 'Inter, sans-serif' }}
                 >
                   {qrisExpired ? 'Waktu pembayaran habis' : `Selesaikan dalam ${formatCountdown(secondsLeft)}`}
                 </span>
               </div>
               <div
-                className="w-full max-w-[176px] h-1 rounded-full mt-2.5 overflow-hidden"
+                className="w-full max-w-[208px] h-1 rounded-full mt-3 overflow-hidden"
                 style={{ backgroundColor: creamAlpha(0.1) }}
               >
                 <div
@@ -298,7 +413,7 @@ export default function OrderSuccessModal({
               </div>
 
               <p
-                className="text-[11px] mt-2.5 sm:mt-3 font-light text-center leading-relaxed hidden sm:block"
+                className="text-xs mt-4 font-light text-center leading-relaxed max-w-[300px]"
                 style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}
               >
                 {qrisExpired
@@ -306,88 +421,57 @@ export default function OrderSuccessModal({
                   : 'Buka aplikasi e-wallet atau m-banking Anda, lalu scan kode di atas untuk menyelesaikan pembayaran.'}
               </p>
             </div>
-          )}
 
-          {promoCode && discount > 0 && (
-            <div
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 mb-3"
-              style={{ backgroundColor: 'rgba(217,163,95,0.1)', border: '1px solid rgba(217,163,95,0.3)' }}
-            >
-              <Tag size={12} style={{ color: GOLD }} />
-              <span className="text-xs font-medium" style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}>
-                Promo <span style={{ color: GOLD, fontFamily: 'monospace' }}>{promoCode}</span> diterapkan
-              </span>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-1.5 pb-2">
-            <div className="flex justify-between text-xs font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
-              <span>Subtotal</span>
-              <span>{formatIDR(subtotal)}</span>
-            </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-xs font-light" style={{ color: '#7BC98A', fontFamily: 'Inter, sans-serif' }}>
-                <span>Diskon Promo</span>
-                <span>-{formatIDR(discount)}</span>
+            {/* Footer total + CTA */}
+            <div className="relative px-6 pt-4 pb-4 sm:pb-6 flex-shrink-0" style={{ borderTop: `1px solid ${creamAlpha(0.08)}`, marginTop: 16 }}>
+              <div
+                className="w-full rounded-2xl px-4 py-3 sm:py-3.5 flex items-center justify-between mb-3 sm:mb-4"
+                style={{ backgroundColor: creamAlpha(0.04), border: `1px solid ${creamAlpha(0.1)}`, backdropFilter: 'blur(6px)' }}
+              >
+                <span className="text-xs font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                  Total Pembayaran
+                </span>
+                <span
+                  className="text-base font-semibold"
+                  style={{
+                    background: GRADIENT,
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    color: 'transparent',
+                  }}
+                >
+                  {formatIDR(total)}
+                </span>
               </div>
-            )}
-            <div className="flex justify-between text-xs font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
-              <span>Pajak (10%)</span>
-              <span>{formatIDR(tax)}</span>
+
+              <p className="text-[11px] mb-3 sm:mb-4 font-light text-center hidden sm:block" style={{ color: creamAlpha(0.4), fontFamily: 'Inter, sans-serif' }}>
+                {qrisExpired
+                  ? 'Kode QRIS kedaluwarsa — tunjukkan halaman ini ke kasir untuk membuat ulang pembayaran.'
+                  : 'Setelah pembayaran QRIS berhasil, tunjukkan halaman ini ke kasir sebagai bukti.'}
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrintReceipt}
+                  disabled={isPrinting}
+                  className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 font-semibold text-xs py-3 sm:py-3.5 rounded-xl transition-all duration-300 hover:bg-white/5 disabled:opacity-60"
+                  style={{ border: `1px solid ${creamAlpha(0.18)}`, color: CREAM }}
+                  aria-label="Cetak struk sebagai PDF"
+                >
+                  <Download size={14} />
+                  <span className="hidden sm:inline">{isPrinting ? 'Menyiapkan...' : 'Cetak Struk'}</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex-1 font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
+                  style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
+                >
+                  Selesai
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Footer total + CTA */}
-        <div className="relative px-6 pt-3 sm:pt-4 pb-4 sm:pb-6 flex-shrink-0" style={{ borderTop: `1px solid ${creamAlpha(0.08)}` }}>
-          <div
-            className="w-full rounded-2xl px-4 py-3 sm:py-3.5 flex items-center justify-between mb-3 sm:mb-4"
-            style={{ backgroundColor: creamAlpha(0.04), border: `1px solid ${creamAlpha(0.1)}`, backdropFilter: 'blur(6px)' }}
-          >
-            <span className="text-xs font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
-              Total Pembayaran
-            </span>
-            <span
-              className="text-base font-semibold"
-              style={{
-                background: GRADIENT,
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                color: 'transparent',
-              }}
-            >
-              {formatIDR(total)}
-            </span>
-          </div>
-
-          <p className="text-[11px] mb-3 sm:mb-4 font-light text-center hidden sm:block" style={{ color: creamAlpha(0.4), fontFamily: 'Inter, sans-serif' }}>
-            {qrisExpired
-              ? 'Kode QRIS kedaluwarsa — tunjukkan halaman ini ke kasir untuk membuat ulang pembayaran.'
-              : paymentMethod === 'qris'
-                ? 'Setelah pembayaran QRIS berhasil, tunjukkan halaman ini ke kasir sebagai bukti.'
-                : 'Tunjukkan halaman ini ke kasir untuk konfirmasi pembayaran.'}
-          </p>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrintReceipt}
-              disabled={isPrinting}
-              className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 font-semibold text-xs py-3 sm:py-3.5 rounded-xl transition-all duration-300 hover:bg-white/5 disabled:opacity-60"
-              style={{ border: `1px solid ${creamAlpha(0.18)}`, color: CREAM }}
-              aria-label="Cetak struk sebagai PDF"
-            >
-              <Download size={14} />
-              <span className="hidden sm:inline">{isPrinting ? 'Menyiapkan...' : 'Cetak Struk'}</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="flex-1 font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
-              style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
-            >
-              Selesai
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
