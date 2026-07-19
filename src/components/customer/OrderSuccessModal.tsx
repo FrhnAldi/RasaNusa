@@ -114,7 +114,7 @@ export default function OrderSuccessModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 py-4 sm:py-6 overflow-y-auto os-modal-scroll">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 py-4 sm:py-6 overflow-y-auto">
       <style>{`
         @keyframes os-pop {
           0% { transform: scale(0.92); opacity: 0; }
@@ -128,15 +128,6 @@ export default function OrderSuccessModal({
           0% { transform: translateX(24px); opacity: 0; }
           100% { transform: translateX(0); opacity: 1; }
         }
-        .os-modal-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .os-modal-scroll::-webkit-scrollbar {
-          display: none;
-          width: 0;
-          height: 0;
-        }
       `}</style>
       <div
         className="fixed inset-0"
@@ -144,14 +135,15 @@ export default function OrderSuccessModal({
         onClick={onClose}
       />
       <div
-        className="relative overflow-y-auto overflow-x-hidden rounded-3xl w-full max-w-md flex flex-col my-auto os-modal-scroll"
+        className="relative overflow-y-auto overflow-x-hidden rounded-3xl w-full max-w-md flex flex-col my-auto"
         style={{
           animation: 'os-pop 450ms cubic-bezier(0.22, 1, 0.36, 1)',
           backgroundColor: inkAlpha(0.92),
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(217,163,95,0.28)',
           boxShadow: '0 30px 70px -20px rgba(0,0,0,0.65), 0 0 40px rgba(217,163,95,0.1)',
-          maxHeight: 'min(calc(100vh - 32px), 720px)',
+          height: 'min(640px, calc(100vh - 32px))',
+          maxHeight: 'calc(100vh - 32px)',
         }}
       >
         <div
@@ -193,7 +185,7 @@ export default function OrderSuccessModal({
             </div>
 
             {/* Scrollable review body */}
-            <div className="relative flex-1 min-h-0 overflow-y-auto px-6 pt-1 os-modal-scroll">
+            <div className="relative flex-1 min-h-0 overflow-y-auto px-6 pt-1">
               <div className="flex items-center justify-between mb-2.5">
                 <p
                   className="text-[11px] font-medium uppercase tracking-[0.16em]"
@@ -332,7 +324,7 @@ export default function OrderSuccessModal({
                 <button
                   onClick={handlePrintReceipt}
                   disabled={isPrinting}
-                  className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 font-semibold text-xs py-3 sm:py-3.5 rounded-xl transition-all duration-300 hover:bg-white/5 disabled:opacity-60"
+                  className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 font-semibold text-sm py-3 sm:py-3.5 rounded-xl transition-all duration-300 hover:bg-white/5 disabled:opacity-60"
                   style={{ border: `1px solid ${creamAlpha(0.18)}`, color: CREAM }}
                   aria-label="Cetak struk sebagai PDF"
                 >
@@ -342,7 +334,7 @@ export default function OrderSuccessModal({
                 {isQris ? (
                   <button
                     onClick={() => setStage('payment')}
-                    className="flex-1 flex items-center justify-center gap-1.5 font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
+                    className="flex-1 flex items-center justify-center gap-1.5 font-semibold text-sm py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
                     style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
                   >
                     <QrCode size={16} />
@@ -351,7 +343,7 @@ export default function OrderSuccessModal({
                 ) : (
                   <button
                     onClick={onClose}
-                    className="flex-1 font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
+                    className="flex-1 font-semibold text-sm py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
                     style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
                   >
                     Selesai
@@ -361,7 +353,10 @@ export default function OrderSuccessModal({
             </div>
           </>
         ) : (
-          <div className="relative flex flex-col" style={{ animation: 'os-slide-in 350ms cubic-bezier(0.22, 1, 0.36, 1)' }}>
+          <div
+            className="relative flex-1 min-h-0 flex flex-col"
+            style={{ animation: 'os-slide-in 350ms cubic-bezier(0.22, 1, 0.36, 1)' }}
+          >
             {/* Header */}
             <div className="relative flex items-center gap-3 px-6 pt-6 sm:pt-7 pb-2 flex-shrink-0">
               <button
@@ -382,8 +377,9 @@ export default function OrderSuccessModal({
               </div>
             </div>
 
-            {/* QR block — the only focus of this stage, so it always has room to breathe */}
-            <div className="relative flex flex-col items-center px-6 pt-4 pb-2">
+            {/* QR block — fills the remaining space and centers vertically so
+                this stage always matches the review card's height exactly. */}
+            <div className="relative flex-1 min-h-0 flex flex-col items-center justify-center px-6 py-2">
               <div
                 className="rounded-xl p-3 sm:p-4 transition-opacity duration-500"
                 style={{
@@ -395,7 +391,7 @@ export default function OrderSuccessModal({
                 <img
                   src={`${import.meta.env.BASE_URL}qris.png`}
                   alt="Kode QRIS"
-                  className="w-40 h-40 sm:w-52 sm:h-52 object-contain block"
+                  className="w-36 h-36 sm:w-44 sm:h-44 object-contain block"
                 />
               </div>
 
@@ -432,7 +428,7 @@ export default function OrderSuccessModal({
             </div>
 
             {/* Footer total + CTA */}
-            <div className="relative px-6 pt-4 pb-4 sm:pb-6 flex-shrink-0" style={{ borderTop: `1px solid ${creamAlpha(0.08)}`, marginTop: 16 }}>
+            <div className="relative px-6 pt-4 pb-4 sm:pb-6 flex-shrink-0" style={{ borderTop: `1px solid ${creamAlpha(0.08)}` }}>
               <div
                 className="w-full rounded-2xl px-4 py-3 sm:py-3.5 flex items-center justify-between mb-3 sm:mb-4"
                 style={{ backgroundColor: creamAlpha(0.04), border: `1px solid ${creamAlpha(0.1)}`, backdropFilter: 'blur(6px)' }}
@@ -463,7 +459,7 @@ export default function OrderSuccessModal({
                 <button
                   onClick={handlePrintReceipt}
                   disabled={isPrinting}
-                  className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 font-semibold text-xs py-3 sm:py-3.5 rounded-xl transition-all duration-300 hover:bg-white/5 disabled:opacity-60"
+                  className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 font-semibold text-sm py-3 sm:py-3.5 rounded-xl transition-all duration-300 hover:bg-white/5 disabled:opacity-60"
                   style={{ border: `1px solid ${creamAlpha(0.18)}`, color: CREAM }}
                   aria-label="Cetak struk sebagai PDF"
                 >
@@ -472,7 +468,7 @@ export default function OrderSuccessModal({
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
+                  className="flex-1 font-semibold text-sm py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
                   style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
                 >
                   Selesai
