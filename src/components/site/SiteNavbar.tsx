@@ -20,7 +20,7 @@ export default function SiteNavbar({ variant = 'dark' }: { variant?: 'dark' | 'l
     };
   }, [menuOpen]);
 
-  const ctaLabel = user ? 'Ke Dashboard' : 'Masuk';
+  const ctaLabel = user ? 'Ke Dashboard' : 'Pesan? Silahkan Login';
   const ctaTarget = user ? (user.role === 'admin' ? '/admin' : '/dashboard') : '/login';
 
   const textColor = variant === 'dark' ? '#F3EAD9' : '#15100C';
@@ -66,16 +66,26 @@ export default function SiteNavbar({ variant = 'dark' }: { variant?: 'dark' | 'l
             >
               <Search size={20} strokeWidth={1.5} />
             </button>
-            <button
-              aria-label="Pesanan"
+            <Link
+              to={ctaTarget}
+              aria-label={user ? 'Lihat pesanan' : 'Masuk untuk memesan'}
               className={`transition-colors hidden sm:inline-flex ${textMuted}`}
             >
               <ShoppingBag size={20} strokeWidth={1.5} />
-            </button>
+            </Link>
             <Link
               to={ctaTarget}
               aria-label={ctaLabel}
-              className="w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center"
+              className="hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap px-3.5 py-2 lg:px-5 lg:py-2.5 rounded-full text-[11px] lg:text-sm font-medium transition-transform duration-300 hover:scale-105"
+              style={{ background: pillBg, border: `1px solid ${pillBorder}`, color: textColor, fontFamily: 'Inter, sans-serif' }}
+            >
+              <User size={15} color={textColor} strokeWidth={1.5} />
+              {ctaLabel}
+            </Link>
+            <Link
+              to={ctaTarget}
+              aria-label={ctaLabel}
+              className="w-8 h-8 rounded-full flex items-center justify-center sm:hidden"
               style={{ background: pillBg, border: `1px solid ${pillBorder}` }}
             >
               <User size={16} color={textColor} strokeWidth={1.5} />

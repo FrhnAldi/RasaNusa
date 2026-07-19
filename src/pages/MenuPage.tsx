@@ -1,16 +1,28 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 import PageHero from '../components/site/PageHero';
 import SiteFooter from '../components/site/SiteFooter';
 import GlobalStyles from '../components/site/GlobalStyles';
 import { CATEGORY_LABELS, formatIDR, INITIAL_PRODUCTS } from '../data/products';
 import { BADGE_STYLE } from '../data/badges';
+import { useAuth } from '../context/AuthContext';
 import type { Category } from '../types/pos';
 
 const CATEGORIES: (Category | 'semua')[] = ['semua', 'makanan', 'camilan', 'minuman', 'dessert'];
 
 export default function MenuPage() {
   const [activeCategory, setActiveCategory] = useState<Category | 'semua'>('semua');
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleOrderClick = () => {
+    if (!user) {
+      navigate('/login');
+    } else {
+      navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+    }
+  };
 
   const filtered = useMemo(
     () =>
@@ -61,7 +73,6 @@ export default function MenuPage() {
           {filtered.map((product, i) => {
             const badgeStyle = product.badge ? BADGE_STYLE[product.badge] : null;
             const BadgeIcon = badgeStyle?.icon;
-            const outOfStock = product.stock === 0;
 
             return (
               <div
@@ -78,7 +89,6 @@ export default function MenuPage() {
                     src={product.image}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    style={{ filter: outOfStock ? 'grayscale(0.6) brightness(0.6)' : 'none' }}
                   />
                   {badgeStyle && BadgeIcon && (
                     <span
@@ -87,14 +97,6 @@ export default function MenuPage() {
                     >
                       <BadgeIcon size={11} />
                       {product.badge}
-                    </span>
-                  )}
-                  {outOfStock && (
-                    <span
-                      className="absolute inset-0 flex items-center justify-center text-sm font-semibold uppercase tracking-wide"
-                      style={{ backgroundColor: 'rgba(21,16,12,0.5)', color: '#F3EAD9' }}
-                    >
-                      Stok Habis
                     </span>
                   )}
                 </div>
@@ -120,15 +122,15 @@ export default function MenuPage() {
                     <span style={{ color: '#D9A441', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 16 }}>
                       {formatIDR(product.price)}
                     </span>
-                    <span
-                      className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-                      style={{
-                        backgroundColor: outOfStock ? 'rgba(243,234,217,0.06)' : 'rgba(217,164,65,0.14)',
-                        color: outOfStock ? 'rgba(243,234,217,0.3)' : '#D9A441',
-                      }}
+                    <button
+                      type="button"
+                      onClick={handleOrderClick}
+                      aria-label={`Pesan ${product.name}`}
+                      className="w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110"
+                      style={{ backgroundColor: 'rgba(217,164,65,0.14)', color: '#D9A441' }}
                     >
                       <ShoppingBag size={15} />
-                    </span>
+                    </button>
                   </div>
                 </div>
               </div>
