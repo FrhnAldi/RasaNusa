@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { ChangeEvent, FormEvent } from 'react';
 import { ChevronDown, ImagePlus, Utensils, X } from 'lucide-react';
 import type { Category, Product } from '../../types/pos';
@@ -8,6 +9,7 @@ interface Props {
   mode: 'add' | 'edit';
   product?: Product;
   onClose: () => void;
+  onSaved?: (id: string) => void;
 }
 
 const CATEGORY_OPTIONS: { value: Category; label: string }[] = [
@@ -47,7 +49,7 @@ function blurGold(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTM
   e.currentTarget.style.borderColor = 'rgba(217,163,95,0.2)';
 }
 
-export default function ProductFormModal({ mode, product, onClose }: Props) {
+export default function ProductFormModal({ mode, product, onClose, onSaved }: Props) {
   const { addProduct, updateProduct } = useAppData();
   const [name, setName] = useState(product?.name ?? '');
   const [category, setCategory] = useState<Category>(product?.category ?? 'makanan');
@@ -79,6 +81,14 @@ export default function ProductFormModal({ mode, product, onClose }: Props) {
     reader.readAsDataURL(file);
   };
 
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const priceNum = Number(price);
@@ -86,7 +96,7 @@ export default function ProductFormModal({ mode, product, onClose }: Props) {
     if (!name.trim() || !priceNum || priceNum <= 0 || stockNum < 0 || !image.trim()) return;
 
     if (mode === 'add') {
-      addProduct({
+      const newId = addProduct({
         name: name.trim(),
         category,
         price: priceNum,
@@ -94,6 +104,7 @@ export default function ProductFormModal({ mode, product, onClose }: Props) {
         image: image.trim(),
         description: description.trim() || 'Menu spesial RasaNusa.',
       });
+      onSaved?.(newId);
     } else if (product) {
       updateProduct(product.id, {
         name: name.trim(),
@@ -107,7 +118,7 @@ export default function ProductFormModal({ mode, product, onClose }: Props) {
     onClose();
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center px-4 animate-fade-in"
       style={{ backgroundColor: 'rgba(4,4,4,0.72)', backdropFilter: 'blur(6px)' }}
@@ -304,7 +315,8 @@ export default function ProductFormModal({ mode, product, onClose }: Props) {
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 }
 
