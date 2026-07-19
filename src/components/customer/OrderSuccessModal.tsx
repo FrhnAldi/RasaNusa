@@ -102,7 +102,7 @@ export default function OrderSuccessModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-4 sm:py-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-4 sm:py-6 overflow-y-auto">
       <style>{`
         @keyframes os-pop {
           0% { transform: scale(0.92); opacity: 0; }
@@ -119,14 +119,14 @@ export default function OrderSuccessModal({
         onClick={onClose}
       />
       <div
-        className="relative overflow-hidden rounded-3xl w-full max-w-md flex flex-col"
+        className="relative overflow-hidden rounded-3xl w-full max-w-md flex flex-col my-auto"
         style={{
           animation: 'os-pop 450ms cubic-bezier(0.22, 1, 0.36, 1)',
           backgroundColor: inkAlpha(0.92),
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(217,163,95,0.28)',
           boxShadow: '0 30px 70px -20px rgba(0,0,0,0.65), 0 0 40px rgba(217,163,95,0.1)',
-          maxHeight: 'min(90vh, 720px)',
+          maxHeight: 'min(calc(100vh - 32px), 720px)',
         }}
       >
         <div
