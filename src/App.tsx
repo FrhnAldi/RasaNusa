@@ -16,7 +16,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <AppDataProvider>
-          <BrowserRouter basename="/GenAi">
+          <BrowserRouter basename="/RasaNusa">
           <Routes>
             <Route path="/" element={<HeroPage />} />
             <Route path="/tentang" element={<AboutPage />} />
