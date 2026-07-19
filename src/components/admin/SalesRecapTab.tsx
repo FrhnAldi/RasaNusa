@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Banknote, CreditCard, QrCode, Receipt, Wallet } from 'lucide-react';
+import { Banknote, CreditCard, FileSpreadsheet, FileText, MessageSquareText, QrCode, Receipt, Wallet } from 'lucide-react';
 import { formatIDR } from '../../data/products';
-import type { PaymentMethod, Transaction } from '../../types/pos';
+import { ORDER_STATUS_META } from '../../data/orderStatus';
+import type { OrderStatus, PaymentMethod, Transaction } from '../../types/pos';
 
 interface Props {
   transactions: Transaction[];
@@ -25,12 +26,14 @@ const METHOD_META: Record<PaymentMethod, { label: string; icon: typeof Banknote;
 
 export default function SalesRecapTab({ transactions }: Props) {
   const [methodFilter, setMethodFilter] = useState<PaymentMethod | 'semua'>('semua');
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'semua'>('semua');
+  const [exporting, setExporting] = useState<'excel' | 'pdf' | null>(null);
 
   const filtered = useMemo(() => {
-    const list =
-      methodFilter === 'semua' ? transactions : transactions.filter((t) => t.paymentMethod === methodFilter);
+    let list = methodFilter === 'semua' ? transactions : transactions.filter((t) => t.paymentMethod === methodFilter);
+    if (statusFilter !== 'semua') list = list.filter((t) => t.status === statusFilter);
     return [...list].sort((a, b) => b.timestamp - a.timestamp);
-  }, [transactions, methodFilter]);
+  }, [transactions, methodFilter, statusFilter]);
 
   const totalsByMethod = useMemo(() => {
     const map: Record<string, number> = {};
@@ -41,6 +44,29 @@ export default function SalesRecapTab({ transactions }: Props) {
   const totalRevenue = transactions.reduce((sum, t) => sum + t.total, 0);
   const totalItems = transactions.reduce((sum, t) => sum + t.items.reduce((s, i) => s + i.quantity, 0), 0);
 
+  // Export libraries (xlsx / jspdf) are fairly heavy, so they're only loaded
+  // on demand — when the admin actually clicks a button — instead of
+  // bloating the initial dashboard bundle.
+  const handleExportExcel = async () => {
+    setExporting('excel');
+    try {
+      const { exportTransactionsToExcel } = await import('../../lib/exportReport');
+      exportTransactionsToExcel(filtered);
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setExporting('pdf');
+    try {
+      const { exportTransactionsToPDF } = await import('../../lib/exportReport');
+      exportTransactionsToPDF(filtered);
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -50,20 +76,66 @@ export default function SalesRecapTab({ transactions }: Props) {
         <StatCard label="Estimasi Keuntungan" value={formatIDR(totalRevenue * 0.4)} accent={GOLD} />
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <FilterChip
-          active={methodFilter === 'semua'}
-          onClick={() => setMethodFilter('semua')}
-          label={`Semua (${transactions.length})`}
-        />
-        {(Object.keys(METHOD_META) as PaymentMethod[]).map((m) => (
+      {/* Export laporan */}
+      <div
+        className="rounded-2xl px-4 py-3.5 flex flex-wrap items-center justify-between gap-3"
+        style={{ backgroundColor: 'rgba(217,163,95,0.06)', border: '1px solid rgba(217,163,95,0.2)' }}
+      >
+        <div>
+          <p className="text-sm font-semibold" style={{ color: CREAM, fontFamily: SERIF }}>
+            Ekspor Laporan
+          </p>
+          <p className="text-[11px] font-light mt-0.5" style={{ color: MUTED }}>
+            Mengekspor {filtered.length} transaksi sesuai filter yang aktif saat ini.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportExcel}
+            disabled={filtered.length === 0 || exporting !== null}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl transition-all duration-300 enabled:hover:scale-[1.03] disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ backgroundColor: 'rgba(123,201,138,0.14)', color: '#7BC98A', border: '1px solid rgba(123,201,138,0.35)' }}
+          >
+            <FileSpreadsheet size={14} /> {exporting === 'excel' ? 'Menyiapkan…' : 'Excel'}
+          </button>
+          <button
+            onClick={handleExportPDF}
+            disabled={filtered.length === 0 || exporting !== null}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl transition-all duration-300 enabled:hover:scale-[1.03] disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ backgroundColor: 'rgba(196,67,43,0.14)', color: '#E8836C', border: '1px solid rgba(196,67,43,0.35)' }}
+          >
+            <FileText size={14} /> {exporting === 'pdf' ? 'Menyiapkan…' : 'PDF'}
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap gap-2">
           <FilterChip
-            key={m}
-            active={methodFilter === m}
-            onClick={() => setMethodFilter(m)}
-            label={`${METHOD_META[m].label} · ${formatIDR(totalsByMethod[m] ?? 0)}`}
+            active={methodFilter === 'semua'}
+            onClick={() => setMethodFilter('semua')}
+            label={`Semua Metode (${transactions.length})`}
           />
-        ))}
+          {(Object.keys(METHOD_META) as PaymentMethod[]).map((m) => (
+            <FilterChip
+              key={m}
+              active={methodFilter === m}
+              onClick={() => setMethodFilter(m)}
+              label={`${METHOD_META[m].label} · ${formatIDR(totalsByMethod[m] ?? 0)}`}
+            />
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <FilterChip active={statusFilter === 'semua'} onClick={() => setStatusFilter('semua')} label="Semua Status" />
+          {(Object.keys(ORDER_STATUS_META) as OrderStatus[]).map((s) => (
+            <FilterChip
+              key={s}
+              active={statusFilter === s}
+              onClick={() => setStatusFilter(s)}
+              label={ORDER_STATUS_META[s].label}
+            />
+          ))}
+        </div>
       </div>
 
       <div
@@ -88,6 +160,9 @@ export default function SalesRecapTab({ transactions }: Props) {
             {filtered.map((t) => {
               const meta = METHOD_META[t.paymentMethod];
               const Icon = meta.icon;
+              const statusMeta = ORDER_STATUS_META[t.status];
+              const StatusIcon = statusMeta.icon;
+              const itemsWithNotes = t.items.filter((i) => i.note);
               return (
                 <div
                   key={t.id}
@@ -109,6 +184,12 @@ export default function SalesRecapTab({ transactions }: Props) {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                        style={{ color: statusMeta.color, backgroundColor: statusMeta.bg }}
+                      >
+                        <StatusIcon size={9} /> {statusMeta.shortLabel}
+                      </span>
                       <span className="text-[11px] font-light" style={{ color: MUTED }}>
                         {new Date(t.timestamp).toLocaleString('id-ID', {
                           day: '2-digit',
@@ -121,9 +202,22 @@ export default function SalesRecapTab({ transactions }: Props) {
                       <span className="text-[11px] font-light" style={{ color: MUTED }}>{meta.label}</span>
                       <span className="text-[11px]" style={{ color: 'rgba(243,234,217,0.25)' }}>·</span>
                       <span className="text-[11px] font-light" style={{ color: MUTED }}>
-                        Kasir: {t.cashierName}
+                        {t.customerName ? `Pelanggan: ${t.customerName}` : `Kasir: ${t.cashierName}`}
                       </span>
                     </div>
+                    {itemsWithNotes.length > 0 && (
+                      <div className="flex flex-col gap-1 mt-1.5">
+                        {itemsWithNotes.map((item) => (
+                          <div key={item.productId} className="flex items-start gap-1.5">
+                            <MessageSquareText size={11} className="flex-shrink-0 mt-0.5" style={{ color: GOLD, opacity: 0.75 }} />
+                            <span className="text-[11px] font-light italic" style={{ color: 'rgba(243,234,217,0.5)' }}>
+                              <span style={{ color: 'rgba(243,234,217,0.7)', fontStyle: 'normal' }}>{item.name}:</span>{' '}
+                              {item.note}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

@@ -1,6 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { Product, Transaction, StockLog, PaymentMethod, Category, OrderType } from '../types/pos';
+import type {
+  Product,
+  Transaction,
+  StockLog,
+  PaymentMethod,
+  Category,
+  OrderType,
+  OrderStatus,
+} from '../types/pos';
 import { INITIAL_PRODUCTS } from '../data/products';
 
 const STORAGE_KEY = 'rasanusa_data_v1';
@@ -12,7 +20,7 @@ interface StoredShape {
 }
 
 interface RecordTransactionInput {
-  items: { product: Product; quantity: number }[];
+  items: { product: Product; quantity: number; note?: string }[];
   subtotal: number;
   tax: number;
   discount?: number;
@@ -47,17 +55,34 @@ interface AppDataContextValue {
   updateProduct: (id: string, patch: Partial<Omit<Product, 'id'>>) => void;
   removeProduct: (id: string) => void;
   removeTransaction: (id: string) => void;
+  updateOrderStatus: (id: string, status: OrderStatus, actorName?: string) => void;
   resetData: () => void;
 }
 
 const AppDataContext = createContext<AppDataContextValue | undefined>(undefined);
+
+/** Ensures transactions saved before the order-status feature existed still have valid status fields. */
+function withStatusDefaults(transactions: Transaction[]): Transaction[] {
+  return transactions.map((t) =>
+    t.status
+      ? t
+      : {
+          ...t,
+          status: 'selesai' as OrderStatus,
+          statusUpdatedAt: t.timestamp,
+          statusHistory: [{ status: 'selesai' as OrderStatus, timestamp: t.timestamp }],
+        }
+  );
+}
 
 function loadInitial(): StoredShape {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as StoredShape;
-      if (parsed && Array.isArray(parsed.products)) return parsed;
+      if (parsed && Array.isArray(parsed.products)) {
+        return { ...parsed, transactions: withStatusDefaults(parsed.transactions ?? []) };
+      }
     }
   } catch {
     // ignore malformed storage
@@ -76,14 +101,35 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
+  // Real-time sync across tabs/windows on the same browser: e.g. an admin
+  // updating an order's status in one tab instantly reflects on a customer's
+  // "Riwayat Pesanan" open in another tab, without a page refresh.
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY || !event.newValue) return;
+      try {
+        const parsed = JSON.parse(event.newValue) as StoredShape;
+        if (parsed && Array.isArray(parsed.products)) {
+          setState({ ...parsed, transactions: withStatusDefaults(parsed.transactions ?? []) });
+        }
+      } catch {
+        // ignore malformed cross-tab payloads
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const recordTransaction = (input: RecordTransactionInput) => {
+    const now = Date.now();
     const transaction: Transaction = {
-      id: `TRX-${Date.now()}`,
+      id: `TRX-${now}`,
       items: input.items.map((l) => ({
         productId: l.product.id,
         name: l.product.name,
         quantity: l.quantity,
         price: l.product.price,
+        note: l.note?.trim() ? l.note.trim() : undefined,
       })),
       subtotal: input.subtotal,
       tax: input.tax,
@@ -94,11 +140,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       cashReceived: input.cashReceived,
       change: input.change,
       cashierName: input.cashierName,
-      timestamp: Date.now(),
+      timestamp: now,
       customerUsername: input.customerUsername,
       customerName: input.customerName,
       orderType: input.orderType,
       tableNumber: input.tableNumber,
+      status: 'menunggu',
+      statusUpdatedAt: now,
+      statusHistory: [{ status: 'menunggu', timestamp: now }],
     };
 
     setState((prev) => {
@@ -172,6 +221,25 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, transactions: prev.transactions.filter((t) => t.id !== id) }));
   };
 
+  const updateOrderStatus = (id: string, status: OrderStatus, actorName?: string) => {
+    setState((prev) => {
+      const now = Date.now();
+      return {
+        ...prev,
+        transactions: prev.transactions.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                status,
+                statusUpdatedAt: now,
+                statusHistory: [...t.statusHistory, { status, timestamp: now, actorName }],
+              }
+            : t
+        ),
+      };
+    });
+  };
+
   const resetData = () => {
     setState({ products: INITIAL_PRODUCTS, transactions: [], stockLogs: [] });
   };
@@ -188,6 +256,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         updateProduct,
         removeProduct,
         removeTransaction,
+        updateOrderStatus,
         resetData,
       }}
     >

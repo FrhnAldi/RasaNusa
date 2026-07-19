@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight,
   Award,
   ChefHat,
+  ChevronDown,
   Clock3,
   Heart,
   LogOut,
+  MessageSquareText,
   Plus,
   Receipt,
   Search,
@@ -21,6 +23,7 @@ import { useAppData } from '../context/AppDataContext';
 import { CATEGORY_LABELS, formatIDR } from '../data/products';
 import { PROMOS } from '../data/promos';
 import { checkPromoEligibility } from '../lib/promoEngine';
+import { ORDER_STATUS_FLOW, ORDER_STATUS_META, formatRelativeTime } from '../data/orderStatus';
 import type { Category, OrderType, PaymentMethod, Product } from '../types/pos';
 import MenuCard from '../components/customer/MenuCard';
 import PromoCarousel from '../components/customer/PromoCarousel';
@@ -60,15 +63,16 @@ export default function CustomerDashboard() {
   const { products, transactions, recordTransaction, removeTransaction } = useAppData();
   const navigate = useNavigate();
 
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const [cart, setCart] = useState<Record<string, { quantity: number; note: string }>>({});
   const [activeTab, setActiveTab] = useState<Category | 'semua'>('semua');
   const [query, setQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [promoCode, setPromoCode] = useState<string | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [showAllOrders, setShowAllOrders] = useState(false);
   const [justOrdered, setJustOrdered] = useState<{
     id: string;
-    items: { name: string; quantity: number; price: number }[];
+    items: { name: string; quantity: number; price: number; note?: string }[];
     subtotal: number;
     tax: number;
     discount: number;
@@ -78,6 +82,14 @@ export default function CustomerDashboard() {
     tableNumber?: string;
     paymentMethod: PaymentMethod;
   } | null>(null);
+
+  // Ticks every 30s so "x menit lalu" labels in the order history stay fresh
+  // without needing a page refresh.
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const productMap = useMemo(() => {
     const map: Record<string, Product> = {};
@@ -102,8 +114,8 @@ export default function CustomerDashboard() {
   const cartLines = useMemo(
     () =>
       Object.entries(cart)
-        .filter(([, qty]) => qty > 0)
-        .map(([productId, quantity]) => ({ product: productMap[productId], quantity }))
+        .filter(([, entry]) => entry.quantity > 0)
+        .map(([productId, entry]) => ({ product: productMap[productId], quantity: entry.quantity, note: entry.note }))
         .filter((line) => line.product),
     [cart, productMap]
   );
@@ -153,30 +165,30 @@ export default function CustomerDashboard() {
 
   const handleAdd = (product: Product) => {
     setCart((prev) => {
-      const current = prev[product.id] ?? 0;
+      const current = prev[product.id]?.quantity ?? 0;
       if (current >= product.stock) return prev;
-      return { ...prev, [product.id]: current + 1 };
+      return { ...prev, [product.id]: { quantity: current + 1, note: prev[product.id]?.note ?? '' } };
     });
   };
 
   const handleIncrement = (productId: string) => {
     const product = productMap[productId];
     setCart((prev) => {
-      const current = prev[productId] ?? 0;
+      const current = prev[productId]?.quantity ?? 0;
       if (!product || current >= product.stock) return prev;
-      return { ...prev, [productId]: current + 1 };
+      return { ...prev, [productId]: { quantity: current + 1, note: prev[productId]?.note ?? '' } };
     });
   };
 
   const handleDecrement = (productId: string) => {
     setCart((prev) => {
-      const current = prev[productId] ?? 0;
+      const current = prev[productId]?.quantity ?? 0;
       if (current <= 1) {
         const next = { ...prev };
         delete next[productId];
         return next;
       }
-      return { ...prev, [productId]: current - 1 };
+      return { ...prev, [productId]: { quantity: current - 1, note: prev[productId]?.note ?? '' } };
     });
   };
 
@@ -185,6 +197,13 @@ export default function CustomerDashboard() {
       const next = { ...prev };
       delete next[productId];
       return next;
+    });
+  };
+
+  const handleNoteChange = (productId: string, note: string) => {
+    setCart((prev) => {
+      if (!prev[productId]) return prev;
+      return { ...prev, [productId]: { ...prev[productId], note } };
     });
   };
 
@@ -227,7 +246,12 @@ export default function CustomerDashboard() {
     });
     setJustOrdered({
       id: `#${Date.now().toString().slice(-6)}`,
-      items: cartLines.map((l) => ({ name: l.product.name, quantity: l.quantity, price: l.product.price })),
+      items: cartLines.map((l) => ({
+        name: l.product.name,
+        quantity: l.quantity,
+        price: l.product.price,
+        note: l.note?.trim() || undefined,
+      })),
       subtotal,
       tax,
       discount,
@@ -591,7 +615,7 @@ export default function CustomerDashboard() {
 
               <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {bestSellers.map((product) => {
-                  const quantity = cart[product.id] ?? 0;
+                  const quantity = cart[product.id]?.quantity ?? 0;
                   return (
                     <div key={product.id} className="group relative rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(243,234,217,0.1)' }}>
                       <div className="relative aspect-[4/3] overflow-hidden">
@@ -755,7 +779,7 @@ export default function CustomerDashboard() {
                 <MenuCard
                   key={product.id}
                   product={product}
-                  quantity={cart[product.id] ?? 0}
+                  quantity={cart[product.id]?.quantity ?? 0}
                   onAdd={handleAdd}
                   onIncrement={handleIncrement}
                   onDecrement={handleDecrement}
@@ -767,9 +791,22 @@ export default function CustomerDashboard() {
 
         {/* Order history */}
         <section className="animate-fade-up delay-500">
-          <h3 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 16, color: CREAM }} className="mb-4">
-            Riwayat Pesanan
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 16, color: CREAM }}>Riwayat Pesanan</h3>
+            {myOrders.length > 4 && (
+              <button
+                onClick={() => setShowAllOrders((v) => !v)}
+                className="flex items-center gap-1 text-xs font-light transition-colors hover:text-[#D9A35F]"
+                style={{ color: 'rgba(243,234,217,0.55)' }}
+              >
+                {showAllOrders ? 'Tampilkan lebih sedikit' : `Lihat semua (${myOrders.length})`}
+                <ChevronDown
+                  size={13}
+                  style={{ transform: showAllOrders ? 'rotate(180deg)' : 'none', transition: 'transform 300ms' }}
+                />
+              </button>
+            )}
+          </div>
           {myOrders.length === 0 ? (
             <div
               className="rounded-2xl py-10 flex flex-col items-center justify-center"
@@ -781,54 +818,103 @@ export default function CustomerDashboard() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {myOrders.slice(0, 6).map((order) => (
-                <div
-                  key={order.id}
-                  className="rounded-2xl px-4 py-3.5 flex items-center gap-4"
-                  style={{ backgroundColor: 'rgba(243,234,217,0.03)', border: '1px solid rgba(243,234,217,0.1)' }}
-                >
+              {(showAllOrders ? myOrders : myOrders.slice(0, 4)).map((order) => {
+                const statusMeta = ORDER_STATUS_META[order.status];
+                const StatusIcon = statusMeta.icon;
+                const isActive = order.status !== 'selesai' && order.status !== 'dibatalkan';
+                const stepIndex = ORDER_STATUS_FLOW.indexOf(order.status);
+                const itemsWithNotes = order.items.filter((i) => i.note);
+                return (
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'rgba(29,107,118,0.16)' }}
+                    key={order.id}
+                    className="rounded-2xl px-4 py-3.5"
+                    style={{ backgroundColor: 'rgba(243,234,217,0.03)', border: '1px solid rgba(243,234,217,0.1)' }}
                   >
-                    <Receipt size={16} style={{ color: '#2FA3B3' }} />
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: 'rgba(29,107,118,0.16)' }}
+                      >
+                        <Receipt size={16} style={{ color: '#2FA3B3' }} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate" style={{ color: CREAM }}>
+                          {order.items.map((i) => `${i.name} x${i.quantity}`).join(', ')}
+                        </p>
+                        <p className="text-xs mt-0.5 font-light" style={{ color: 'rgba(243,234,217,0.45)' }}>
+                          {new Date(order.timestamp).toLocaleString('id-ID', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}{' '}
+                          · {order.orderType === 'takeaway' ? 'Bawa Pulang' : order.tableNumber ? `Meja ${order.tableNumber}` : 'Dine-in'} ·{' '}
+                          {PAYMENT_LABELS[order.paymentMethod]}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-bold" style={{ color: CREAM }}>
+                          {formatIDR(order.total)}
+                        </p>
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full mt-0.5"
+                          style={{ color: statusMeta.color, backgroundColor: statusMeta.bg }}
+                        >
+                          <StatusIcon size={10} /> {statusMeta.shortLabel}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteOrder(order.id)}
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10"
+                        style={{ color: 'rgba(243,234,217,0.35)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = '#E8836C')}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(243,234,217,0.35)')}
+                        aria-label="Hapus riwayat pesanan ini"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+
+                    {/* Real-time status progress — only meaningful for orders still in flight. */}
+                    {isActive && (
+                      <div className="flex items-center gap-1.5 mt-3 pl-14 pr-1">
+                        {ORDER_STATUS_FLOW.map((step, idx) => (
+                          <div key={step} className="flex items-center flex-1 last:flex-none">
+                            <span
+                              className="w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-500"
+                              style={{
+                                backgroundColor: idx <= stepIndex ? GOLD : 'rgba(243,234,217,0.15)',
+                                boxShadow: idx === stepIndex ? '0 0 8px rgba(217,163,95,0.6)' : 'none',
+                              }}
+                            />
+                            {idx < ORDER_STATUS_FLOW.length - 1 && (
+                              <span
+                                className="h-px flex-1 mx-1 transition-colors duration-500"
+                                style={{ backgroundColor: idx < stepIndex ? GOLD : 'rgba(243,234,217,0.12)' }}
+                              />
+                            )}
+                          </div>
+                        ))}
+                        <span className="text-[10px] font-light ml-2 flex-shrink-0" style={{ color: 'rgba(243,234,217,0.4)' }}>
+                          {formatRelativeTime(order.statusUpdatedAt, nowTick)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Special requests noted per item at checkout. */}
+                    {itemsWithNotes.length > 0 && (
+                      <div className="flex flex-col gap-1 mt-3 pl-14">
+                        {itemsWithNotes.map((item) => (
+                          <div key={item.productId} className="flex items-start gap-1.5">
+                            <MessageSquareText size={11} className="flex-shrink-0 mt-0.5" style={{ color: GOLD, opacity: 0.75 }} />
+                            <span className="text-[11px] font-light italic" style={{ color: 'rgba(243,234,217,0.5)' }}>
+                              <span style={{ color: 'rgba(243,234,217,0.7)', fontStyle: 'normal' }}>{item.name}:</span> {item.note}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate" style={{ color: CREAM }}>
-                      {order.items.map((i) => `${i.name} x${i.quantity}`).join(', ')}
-                    </p>
-                    <p className="text-xs mt-0.5 font-light" style={{ color: 'rgba(243,234,217,0.45)' }}>
-                      {new Date(order.timestamp).toLocaleString('id-ID', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      })}{' '}
-                      · {order.orderType === 'takeaway' ? 'Bawa Pulang' : order.tableNumber ? `Meja ${order.tableNumber}` : 'Dine-in'} ·{' '}
-                      {PAYMENT_LABELS[order.paymentMethod]}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold" style={{ color: CREAM }}>
-                      {formatIDR(order.total)}
-                    </p>
-                    <span
-                      className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
-                      style={{ color: GOLD, backgroundColor: 'rgba(217,163,95,0.14)' }}
-                    >
-                      Selesai
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteOrder(order.id)}
-                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10"
-                    style={{ color: 'rgba(243,234,217,0.35)' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#E8836C')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(243,234,217,0.35)')}
-                    aria-label="Hapus riwayat pesanan ini"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
@@ -888,6 +974,7 @@ export default function CustomerDashboard() {
         onIncrement={handleIncrement}
         onDecrement={handleDecrement}
         onRemove={handleRemove}
+        onNoteChange={handleNoteChange}
         subtotal={subtotal}
         tax={tax}
         discount={discount}

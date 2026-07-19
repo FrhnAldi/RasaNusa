@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Minus, PackagePlus, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { formatIDR, CATEGORY_LABELS } from '../../data/products';
 import type { Category, Product } from '../../types/pos';
@@ -23,6 +23,26 @@ export default function StockTab({ products }: { products: Product[] }) {
   const [tab, setTab] = useState<Category | 'semua'>('semua');
   const [amounts, setAmounts] = useState<Record<string, number>>({});
   const [formState, setFormState] = useState<{ mode: 'add' | 'edit'; product?: Product } | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const timeout = window.setTimeout(() => setHighlightId(null), 2200);
+    return () => window.clearTimeout(timeout);
+  }, [highlightId]);
+
+  const handleProductAdded = (id: string) => {
+    // Reset any active filter/search so the new menu is guaranteed to be
+    // visible (it's always prepended to `products`, i.e. first in the list),
+    // then bring the section into view so admin doesn't have to scroll for it.
+    setTab('semua');
+    setQuery('');
+    setHighlightId(id);
+    requestAnimationFrame(() => {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   const filtered = useMemo(() => {
     // `products` is already ordered newest-first (new menu items are prepended
@@ -57,7 +77,7 @@ export default function StockTab({ products }: { products: Product[] }) {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={sectionRef} className="flex flex-col gap-4 scroll-mt-24">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
           {TABS.map((t) => (
@@ -112,7 +132,9 @@ export default function StockTab({ products }: { products: Product[] }) {
               return (
                 <div
                   key={product.id}
-                  className="px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3 transition-colors duration-300 hover:bg-white/[0.02]"
+                  className={`px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3 transition-colors duration-300 hover:bg-white/[0.02] ${
+                    highlightId === product.id ? 'animate-highlight-glow' : ''
+                  }`}
                 >
                   <img
                     src={product.image}
@@ -206,6 +228,9 @@ export default function StockTab({ products }: { products: Product[] }) {
           mode={formState.mode}
           product={formState.product}
           onClose={() => setFormState(null)}
+          onSaved={(id) => {
+            if (formState.mode === 'add') handleProductAdded(id);
+          }}
         />
       )}
     </div>

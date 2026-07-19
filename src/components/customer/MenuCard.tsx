@@ -20,7 +20,6 @@ interface Props {
 
 export default function MenuCard({ product, quantity, onAdd, onIncrement, onDecrement }: Props) {
   const remaining = product.stock - quantity;
-  const isOut = remaining <= 0 && quantity === 0;
   const badgeStyle = product.badge ? BADGE_STYLE[product.badge] : null;
   const BadgeIcon = badgeStyle?.icon;
 
@@ -30,7 +29,6 @@ export default function MenuCard({ product, quantity, onAdd, onIncrement, onDecr
       style={{
         backgroundColor: 'rgba(243,234,217,0.04)',
         border: '1px solid rgba(243,234,217,0.1)',
-        opacity: isOut ? 0.55 : 1,
       }}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden">
@@ -39,7 +37,6 @@ export default function MenuCard({ product, quantity, onAdd, onIncrement, onDecr
           alt={product.name}
           loading="lazy"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          style={{ filter: product.stock === 0 ? 'grayscale(0.5) brightness(0.6)' : 'none' }}
         />
         {badgeStyle && BadgeIcon && (
           <span
@@ -49,16 +46,6 @@ export default function MenuCard({ product, quantity, onAdd, onIncrement, onDecr
             <BadgeIcon size={10} />
             {product.badge}
           </span>
-        )}
-        {product.stock === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(7,7,7,0.55)' }}>
-            <span
-              className="text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full"
-              style={{ backgroundColor: 'rgba(7,7,7,0.7)', color: CREAM, border: '1px solid rgba(243,234,217,0.2)' }}
-            >
-              Stok Habis
-            </span>
-          </div>
         )}
       </div>
 

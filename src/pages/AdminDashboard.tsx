@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ChefHat,
+  Clock3,
   LayoutDashboard,
   LogOut,
   PackageSearch,
@@ -16,14 +17,16 @@ import { useAuth } from '../context/AuthContext';
 import { formatIDR } from '../data/products';
 import GlobalStyles from '../components/site/GlobalStyles';
 import OverviewTab from '../components/admin/OverviewTab';
+import OrdersTab from '../components/admin/OrdersTab';
 import SalesRecapTab from '../components/admin/SalesRecapTab';
 import StockTab from '../components/admin/StockTab';
 
-type TabKey = 'overview' | 'recap' | 'stock';
+type TabKey = 'overview' | 'orders' | 'recap' | 'stock';
 
 const TABS: { key: TabKey; label: string; icon: typeof LayoutDashboard; desc: string }[] = [
   { key: 'overview', label: 'Ringkasan', icon: LayoutDashboard, desc: 'Performa bisnis sekilas pandang.' },
-  { key: 'recap', label: 'Rekap Penjualan', icon: Receipt, desc: 'Riwayat dan rincian setiap transaksi.' },
+  { key: 'orders', label: 'Pesanan', icon: Clock3, desc: 'Pantau & perbarui status pesanan secara real-time.' },
+  { key: 'recap', label: 'Rekap Penjualan', icon: Receipt, desc: 'Riwayat, rincian, dan ekspor laporan setiap transaksi.' },
   { key: 'stock', label: 'Kelola Stok', icon: PackageSearch, desc: 'Atur menu dan ketersediaan stok.' },
 ];
 
@@ -231,6 +234,7 @@ export default function AdminDashboard() {
         {/* Tab content — re-keys on tab change to replay the entrance animation */}
         <div key={tab} className="animate-fade-up">
           {tab === 'overview' && <OverviewTab products={products} transactions={transactions} />}
+          {tab === 'orders' && <OrdersTab transactions={transactions} />}
           {tab === 'recap' && <SalesRecapTab transactions={transactions} />}
           {tab === 'stock' && <StockTab products={products} />}
         </div>

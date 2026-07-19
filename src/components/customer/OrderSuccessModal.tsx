@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Clock3, Tag } from 'lucide-react';
+import { CheckCircle2, Clock3, MessageSquareText, Tag } from 'lucide-react';
 import { formatIDR } from '../../data/products';
 
 interface ReviewItem {
   name: string;
   quantity: number;
   price: number;
+  note?: string;
 }
 
 interface Props {
@@ -129,6 +130,15 @@ export default function OrderSuccessModal({
             Pesanan <span style={{ color: GOLD, fontWeight: 600 }}>{orderId}</span> sudah kami terima dan sedang
             disiapkan dengan penuh perhatian.
           </p>
+          <span
+            className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-3 py-1 rounded-full"
+            style={{ color: GOLD, backgroundColor: 'rgba(217,163,95,0.14)' }}
+          >
+            <Clock3 size={11} /> Menunggu Konfirmasi
+          </span>
+          <p className="text-[11px] mt-2 font-light" style={{ color: 'rgba(243,234,217,0.4)', fontFamily: 'Inter, sans-serif' }}>
+            Pantau perkembangan status pesanan Anda secara real-time di bagian Riwayat Pesanan.
+          </p>
         </div>
 
         {/* Scrollable review body */}
@@ -149,23 +159,33 @@ export default function OrderSuccessModal({
             {items.map((item, idx) => (
               <li
                 key={`${item.name}-${idx}`}
-                className="flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5"
+                className="rounded-xl px-3.5 py-2.5"
                 style={{ backgroundColor: 'rgba(243,234,217,0.04)', border: '1px solid rgba(243,234,217,0.08)' }}
               >
-                <div className="min-w-0 flex items-center gap-2">
-                  <span
-                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold"
-                    style={{ backgroundColor: 'rgba(217,163,95,0.16)', color: GOLD }}
-                  >
-                    {item.quantity}
-                  </span>
-                  <span className="text-sm truncate" style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}>
-                    {item.name}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex items-center gap-2">
+                    <span
+                      className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold"
+                      style={{ backgroundColor: 'rgba(217,163,95,0.16)', color: GOLD }}
+                    >
+                      {item.quantity}
+                    </span>
+                    <span className="text-sm truncate" style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}>
+                      {item.name}
+                    </span>
+                  </div>
+                  <span className="text-xs font-light flex-shrink-0" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
+                    {formatIDR(item.price * item.quantity)}
                   </span>
                 </div>
-                <span className="text-xs font-light flex-shrink-0" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
-                  {formatIDR(item.price * item.quantity)}
-                </span>
+                {item.note && (
+                  <div className="flex items-start gap-1.5 mt-1.5 pl-7">
+                    <MessageSquareText size={11} className="flex-shrink-0 mt-0.5" style={{ color: GOLD, opacity: 0.8 }} />
+                    <span className="text-[11px] font-light italic" style={{ color: 'rgba(243,234,217,0.55)', fontFamily: 'Inter, sans-serif' }}>
+                      {item.note}
+                    </span>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

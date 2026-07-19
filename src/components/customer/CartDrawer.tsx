@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { CreditCard, Minus, Plus, QrCode, ShoppingBag, Tag, Trash2, Wallet, X } from 'lucide-react';
+import { CreditCard, MessageSquarePlus, Minus, Plus, QrCode, ShoppingBag, Tag, Trash2, Wallet, X } from 'lucide-react';
 import type { OrderType, PaymentMethod, Product } from '../../types/pos';
 import { formatIDR } from '../../data/products';
 
 interface CartLine {
   product: Product;
   quantity: number;
+  note: string;
 }
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
   onIncrement: (productId: string) => void;
   onDecrement: (productId: string) => void;
   onRemove: (productId: string) => void;
+  onNoteChange: (productId: string, note: string) => void;
   subtotal: number;
   tax: number;
   discount: number;
@@ -47,6 +49,7 @@ export default function CartDrawer({
   onIncrement,
   onDecrement,
   onRemove,
+  onNoteChange,
   subtotal,
   tax,
   discount,
@@ -164,65 +167,80 @@ export default function CartDrawer({
             </div>
           ) : (
             <ul className="flex flex-col gap-2.5">
-              {lines.map(({ product, quantity }) => (
+              {lines.map(({ product, quantity, note }) => (
                 <li
                   key={product.id}
-                  className="flex items-center gap-3 rounded-2xl px-3 py-2.5"
+                  className="rounded-2xl px-3 py-2.5"
                   style={{
                     backgroundColor: 'rgba(243,234,217,0.03)',
                     border: '1px solid rgba(243,234,217,0.08)',
                     backdropFilter: 'blur(6px)',
                   }}
                 >
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
-                    style={{ backgroundColor: 'rgba(243,234,217,0.06)' }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate" style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}>
-                      {product.name}
-                    </p>
-                    <p className="text-xs font-light mt-0.5" style={{ color: GOLD, fontFamily: 'Inter, sans-serif' }}>
-                      {formatIDR(product.price)}
-                    </p>
-                  </div>
-                  <div
-                    className="flex items-center gap-1.5 rounded-full px-1 py-1"
-                    style={{ border: '1px solid rgba(217,163,95,0.25)' }}
-                  >
-                    <button
-                      onClick={() => onDecrement(product.id)}
-                      className="w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10"
-                      style={{ color: CREAM }}
-                      aria-label={`Kurangi ${product.name}`}
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                      style={{ backgroundColor: 'rgba(243,234,217,0.06)' }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate" style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}>
+                        {product.name}
+                      </p>
+                      <p className="text-xs font-light mt-0.5" style={{ color: GOLD, fontFamily: 'Inter, sans-serif' }}>
+                        {formatIDR(product.price)}
+                      </p>
+                    </div>
+                    <div
+                      className="flex items-center gap-1.5 rounded-full px-1 py-1"
+                      style={{ border: '1px solid rgba(217,163,95,0.25)' }}
                     >
-                      <Minus size={12} />
-                    </button>
-                    <span className="text-sm font-semibold w-5 text-center" style={{ color: CREAM }}>
-                      {quantity}
-                    </span>
+                      <button
+                        onClick={() => onDecrement(product.id)}
+                        className="w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10"
+                        style={{ color: CREAM }}
+                        aria-label={`Kurangi ${product.name}`}
+                      >
+                        <Minus size={12} />
+                      </button>
+                      <span className="text-sm font-semibold w-5 text-center" style={{ color: CREAM }}>
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() => onIncrement(product.id)}
+                        disabled={quantity >= product.stock}
+                        className="w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                        style={{ color: CREAM }}
+                        aria-label={`Tambah ${product.name}`}
+                      >
+                        <Plus size={12} />
+                      </button>
+                    </div>
                     <button
-                      onClick={() => onIncrement(product.id)}
-                      disabled={quantity >= product.stock}
-                      className="w-6 h-6 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
-                      style={{ color: CREAM }}
-                      aria-label={`Tambah ${product.name}`}
+                      onClick={() => onRemove(product.id)}
+                      className="flex-shrink-0 transition-colors duration-300"
+                      style={{ color: 'rgba(243,234,217,0.3)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#E8836C')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(243,234,217,0.3)')}
+                      aria-label={`Hapus ${product.name}`}
                     >
-                      <Plus size={12} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
-                  <button
-                    onClick={() => onRemove(product.id)}
-                    className="flex-shrink-0 transition-colors duration-300"
-                    style={{ color: 'rgba(243,234,217,0.3)' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#E8836C')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(243,234,217,0.3)')}
-                    aria-label={`Hapus ${product.name}`}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+
+                  {/* Special request for this specific item — e.g. "tidak pedas", "tanpa es". */}
+                  <div className="flex items-center gap-2 mt-2 pl-1">
+                    <MessageSquarePlus size={13} className="flex-shrink-0" style={{ color: 'rgba(243,234,217,0.35)' }} />
+                    <input
+                      value={note}
+                      onChange={(e) => onNoteChange(product.id, e.target.value)}
+                      placeholder="Catatan untuk item ini (opsional)"
+                      maxLength={120}
+                      className="w-full bg-transparent text-xs outline-none font-light py-1"
+                      style={{ color: CREAM, fontFamily: 'Inter, sans-serif' }}
+                    />
+                  </div>
                 </li>
               ))}
             </ul>

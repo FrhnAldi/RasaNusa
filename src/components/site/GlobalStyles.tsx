@@ -62,6 +62,12 @@ export default function GlobalStyles() {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.55; }
       }
+      @keyframes highlightGlow {
+        0% { background-color: rgba(217,163,95,0.22); box-shadow: inset 0 0 0 1px rgba(217,163,95,0.5); }
+        100% { background-color: transparent; box-shadow: inset 0 0 0 1px transparent; }
+      }
+
+      .animate-highlight-glow { animation: highlightGlow 2.2s cubic-bezier(0.16,1,0.3,1) both; }
 
       .animate-fade-up { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
       .animate-fade-in { animation: fadeIn 0.7s cubic-bezier(0.16,1,0.3,1) both; }
@@ -100,7 +106,7 @@ export default function GlobalStyles() {
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .animate-marquee-left, .animate-marquee-right, .animate-spin-slow, .animate-pulse-soft { animation: none; }
+        .animate-marquee-left, .animate-marquee-right, .animate-spin-slow, .animate-pulse-soft, .animate-highlight-glow { animation: none; }
       }
     `}</style>
   );
