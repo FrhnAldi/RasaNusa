@@ -19,13 +19,13 @@ export default function SiteFooter() {
               letterSpacing: '-0.02em',
             }}
           >
-            RasaNusa
+            Saung Baraya
           </Link>
           <p
             className="mt-3 max-w-[240px]"
             style={{ color: colors.creamAlpha(0.55), fontSize: 14, lineHeight: 1.6, fontFamily: 'Inter, sans-serif' }}
           >
-            Restoran &amp; dapur nusantara, menghadirkan cita rasa rumahan otentik untuk keluarga Indonesia.
+            Rumah makan Sunda & Betawi, menghadirkan cita rasa leluhur dengan resep turun-temurun.
           </p>
         </div>
 
@@ -55,7 +55,7 @@ export default function SiteFooter() {
           <div className="flex flex-col gap-2.5 text-sm" style={{ color: colors.creamAlpha(0.75) }}>
             <span className="flex items-start gap-2">
               <MapPin size={15} className="mt-0.5 flex-shrink-0" color={colors.accent} />
-              Jl. Merdeka No. 45, Jakarta Selatan
+              Jl. Kebon Kacang No. 12, Jakarta Selatan
             </span>
             <span className="flex items-center gap-2">
               <Phone size={15} color={colors.accent} />
@@ -63,7 +63,7 @@ export default function SiteFooter() {
             </span>
             <span className="flex items-center gap-2">
               <Mail size={15} color={colors.accent} />
-              halo@rasanusa.id
+              halo@saungbaraya.id
             </span>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function SiteFooter() {
           </div>
           <a
             href="#"
-            aria-label="Media sosial RasaNusa"
+            aria-label="Media sosial Saung Baraya"
             className="w-9 h-9 rounded-full flex items-center justify-center"
             style={{ background: colors.creamAlpha(0.08), border: `1px solid ${colors.creamAlpha(0.2)}` }}
           >
@@ -95,10 +95,10 @@ export default function SiteFooter() {
         style={{ borderTop: `1px solid ${colors.creamAlpha(0.08)}` }}
       >
         <p style={{ color: colors.creamAlpha(0.4), fontSize: 12, fontFamily: 'Inter, sans-serif' }}>
-          © {new Date().getFullYear()} RasaNusa. Seluruh hak cipta dilindungi.
+          © {new Date().getFullYear()} Saung Baraya. Seluruh hak cipta dilindungi.
         </p>
         <p style={{ color: colors.creamAlpha(0.4), fontSize: 12, fontFamily: 'Inter, sans-serif' }}>
-          Dibuat dengan cinta untuk cita rasa Indonesia
+          Dibuat dengan cinta untuk cita rasa Sunda & Betawi
         </p>
       </div>
     </footer>

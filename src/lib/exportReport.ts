@@ -42,7 +42,7 @@ function buildSummary(transactions: Transaction[]) {
 
 function reportFilename(ext: string) {
   const stamp = new Date().toISOString().slice(0, 10);
-  return `Laporan-Pesanan-RasaNusa-${stamp}.${ext}`;
+  return `Laporan-Pesanan-SaungBaraya-${stamp}.${ext}`;
 }
 
 /**
@@ -123,7 +123,7 @@ export function exportTransactionsToPDF(transactions: Transaction[]) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
 
   doc.setFontSize(16);
-  doc.text('Laporan Pesanan — RasaNusa', 40, 40);
+  doc.text('Laporan Pesanan — Saung Baraya', 40, 40);
   doc.setFontSize(9);
   doc.setTextColor(110);
   doc.text(`Dicetak pada ${new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}`, 40, 56);
@@ -177,7 +177,7 @@ export function exportTransactionsToPDF(transactions: Transaction[]) {
 function receiptFilename(orderId: string) {
   const stamp = new Date().toISOString().slice(0, 10);
   const safeId = orderId.replace(/[^a-zA-Z0-9-]/g, '');
-  return `Struk-RasaNusa-${safeId}-${stamp}.pdf`;
+  return `Struk-SaungBaraya-${safeId}-${stamp}.pdf`;
 }
 
 /** Minimal shape needed to render a customer receipt — works for both a
@@ -229,13 +229,13 @@ export function exportReceiptToPDF(receipt: ReceiptData) {
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
-  doc.text('RasaNusa', centerX, y, { align: 'center' });
+  doc.text('Saung Baraya', centerX, y, { align: 'center' });
   y += 14;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(90);
-  doc.text('Sajian Istimewa Nusantara', centerX, y, { align: 'center' });
+  doc.text('Rasa Asli Sunda & Betawi', centerX, y, { align: 'center' });
   y += 16;
 
   doc.setDrawColor(200);
@@ -357,7 +357,7 @@ export function exportReceiptToPDF(receipt: ReceiptData) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(110);
-  doc.text('Terima kasih telah memesan di RasaNusa!', centerX, y, { align: 'center' });
+  doc.text('Terima kasih telah memesan di Saung Baraya!', centerX, y, { align: 'center' });
   y += 11;
   doc.text('Struk ini adalah bukti pembayaran yang sah.', centerX, y, { align: 'center' });
 

@@ -102,7 +102,7 @@ export default function ProductFormModal({ mode, product, onClose, onSaved }: Pr
         price: priceNum,
         stock: stockNum,
         image: image.trim(),
-        description: description.trim() || 'Menu spesial RasaNusa.',
+        description: description.trim() || 'Menu spesial Saung Baraya.',
       });
       onSaved?.(newId);
     } else if (product) {
@@ -170,7 +170,7 @@ export default function ProductFormModal({ mode, product, onClose, onSaved }: Pr
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              placeholder="Contoh: Es Teh Manis"
+              placeholder="Contoh: Sayur Asem Sunda"
               style={fieldStyle}
               onFocus={focusGold}
               onBlur={blurGold}

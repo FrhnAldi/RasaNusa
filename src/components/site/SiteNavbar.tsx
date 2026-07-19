@@ -51,7 +51,7 @@ export default function SiteNavbar({ variant = 'dark' }: { variant?: 'dark' | 'l
               lineHeight: 1,
             }}
           >
-            RasaNusa
+            Saung Baraya
           </Link>
 
           <div className="hidden md:flex items-center gap-10 animate-fade-in delay-400">

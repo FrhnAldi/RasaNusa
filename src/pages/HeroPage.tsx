@@ -14,22 +14,22 @@ const HIGHLIGHT_CARDS = [
   {
     icon: ChefHat,
     bg: '#15100C',
-    text: 'Resep otentik warisan dapur keluarga, diracik langsung oleh koki kami',
+    text: 'Resep leluhur Sunda dan Betawi, diracik turun-temurun dari dapur keluarga',
   },
   {
     icon: Leaf,
     bg: '#3F6B3A',
-    text: 'Bahan segar pilihan pasar lokal, dimasak baru setiap hari',
+    text: 'Sayur dan lalapan segar pilihan pasar lokal, dipetik baru setiap hari',
   },
   {
     icon: Soup,
     bg: '#1D6B76',
-    text: 'Kuah dan bumbu rempah nusantara diracik tanpa penyedap instan',
+    text: 'Kuah dan sambal khas tanah Pasundan diracik tanpa penyedap instan',
   },
   {
     icon: Flame,
     bg: '#A85C34',
-    text: 'Level pedas bisa disesuaikan, dari si manis sampai si pemberani',
+    text: 'Level pedas bisa disesuaikan, dari sambal terasi sampai jengkol yang menggigit',
   },
 ];
 
@@ -38,7 +38,7 @@ const TESTIMONIALS = [
     name: 'Dinda Ayu Lestari',
     role: 'Pelanggan sejak 2022',
     quote:
-      'Rendangnya bikin kangen masakan rumah. Porsinya pas, rempahnya berasa banget di setiap suapan.',
+      'Nasi timbelnya bikin kangen masakan rumah. Sambal terasinya berasa banget, lalapannya selalu segar.',
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&auto=format',
     rating: 5,
   },
@@ -46,7 +46,7 @@ const TESTIMONIALS = [
     name: 'Fajar Nugroho',
     role: 'Food vlogger',
     quote:
-      'Sate ayamnya juara, bumbu kacangnya gurih tapi ringan. Sudah jadi langganan tim kantor tiap Jumat.',
+      'Sate maranggi di sini juara, bumbu kecapnya khas Purwakarta banget. Sudah jadi langganan tim kantor tiap Jumat.',
     avatar: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&h=200&fit=crop&auto=format',
     rating: 5,
   },
@@ -54,7 +54,7 @@ const TESTIMONIALS = [
     name: 'Ratna Kusuma',
     role: 'Pelanggan setia',
     quote:
-      'Soto ayamnya hangat pas hujan, pelayanannya ramah dan cepat. Selalu jadi pilihan pertama keluarga kami.',
+      'Soto Betawinya hangat pas hujan, kuah santannya gurih. Selalu jadi pilihan pertama keluarga kami.',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&auto=format',
     rating: 5,
   },
@@ -62,7 +62,7 @@ const TESTIMONIALS = [
     name: 'Bima Prasetyo',
     role: 'Pelanggan sejak 2023',
     quote:
-      'Nasi goreng kampungnya autentik, rasanya persis racikan warung legendaris di kampung halaman saya.',
+      'Gado-gado Betawinya autentik, saus kacangnya kental persis racikan warung legendaris di kampung halaman saya.',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&auto=format',
     rating: 4,
   },
@@ -70,7 +70,7 @@ const TESTIMONIALS = [
     name: 'Sari Wulandari',
     role: 'Ibu rumah tangga',
     quote:
-      'Anak-anak saya suka ayam gepreknya, pedasnya bisa diatur. Tempat favorit keluarga untuk makan malam.',
+      'Anak-anak saya suka combronya, gorengannya selalu anget dan renyah. Tempat favorit keluarga untuk makan malam.',
     avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=200&fit=crop&auto=format',
     rating: 5,
   },
@@ -103,7 +103,7 @@ export default function HeroPage() {
           className="absolute inset-0"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&q=85&auto=format&fit=crop')",
+              "url('https://images.unsplash.com/photo-1512058564366-18510be2db19?w=1600&q=80&fm=jpg&fit=crop')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -144,31 +144,24 @@ export default function HeroPage() {
               className="block overflow-hidden"
               style={{ fontSize: 'clamp(48px, 12vw, 130px)', lineHeight: 1.02 }}
             >
-              <Word delay="0.3s">Cita</Word> <Word delay="0.4s">Rasa</Word>
+              <Word delay="0.3s">Rasa</Word> <Word delay="0.4s">Asli</Word>
             </span>
             <span
               className="block overflow-hidden"
               style={{ fontSize: 'clamp(48px, 12vw, 130px)', lineHeight: 1.02 }}
             >
               <Word delay="0.5s" dim>
-                Nusantara
+                Sunda
               </Word>{' '}
               <Word delay="0.6s" dim>
-                di
+                &amp;
               </Word>
             </span>
             <span
               className="flex items-center overflow-hidden"
               style={{ fontSize: 'clamp(48px, 12vw, 130px)', lineHeight: 1.02 }}
             >
-              <Word delay="0.7s">Setiap</Word>{' '}
-              <Word delay="0.8s">Suapan</Word>
-              <img
-                src="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300&h=300&fit=crop&auto=format"
-                alt="Hidangan RasaNusa"
-                className="hidden sm:inline-block align-middle ml-2 lg:ml-4 rounded-full object-cover animate-scale-in delay-1000"
-                style={{ height: 'clamp(60px, 10vw, 130px)', width: 'clamp(60px, 10vw, 130px)', border: `2px solid ${colors.creamAlpha(0.4)}` }}
-              />
+              <Word delay="0.7s">Betawi</Word>
             </span>
           </h1>
 
@@ -207,25 +200,46 @@ export default function HeroPage() {
                 color: colors.creamAlpha(0.75),
               }}
             >
-              Racikan resep rumahan nusantara, dimasak segar setiap hari dari dapur kami untuk Anda.
+              Racikan resep leluhur Sunda dan Betawi, dimasak segar setiap hari dari dapur kami untuk Anda.
             </p>
           </div>
         </section>
 
         {/* floating dish image, desktop only */}
-        <img
-          src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=1200&q=85&auto=format&fit=crop"
-          alt="Nasi Goreng Kampung"
-          className="hidden lg:block absolute z-10 rounded-3xl object-cover animate-scale-in delay-700"
+        <div
+          className="hidden lg:block absolute z-10 animate-scale-in delay-700"
           style={{
             width: 'clamp(320px, 30vw, 460px)',
             height: 'clamp(380px, 36vw, 560px)',
             bottom: '6%',
             right: 'clamp(2%, 4vw, 6%)',
-            boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6)',
-            border: `1px solid ${colors.creamAlpha(0.15)}`,
           }}
-        />
+        >
+          <img
+            src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80&fm=jpg&fit=crop"
+            alt="Nasi Timbel Komplit Sunda"
+            className="w-full h-full rounded-3xl object-cover"
+            style={{
+              boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6)',
+              border: `1px solid ${colors.creamAlpha(0.15)}`,
+            }}
+          />
+
+          {/* stacked photo, bottom-left corner */}
+          <img
+            src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=400&q=80&fm=jpg&fit=crop"
+            alt="Sambal dan lalapan segar"
+            className="absolute rounded-2xl object-cover"
+            style={{
+              width: 'clamp(110px, 11vw, 160px)',
+              height: 'clamp(110px, 11vw, 160px)',
+              bottom: 'clamp(-24px, -3vw, -18px)',
+              left: 'clamp(-24px, -3vw, -18px)',
+              boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)',
+              border: `3px solid ${colors.ink}`,
+            }}
+          />
+        </div>
       </div>
 
       {/* ================= 3-PANEL STRIP ================= */}
@@ -315,7 +329,7 @@ export default function HeroPage() {
         <div className="relative flex items-center gap-5 sm:gap-8 px-6 sm:px-10 py-10 animate-fade-up delay-1100" style={{ backgroundColor: colors.ink }}>
           <img
             src="https://images.unsplash.com/photo-1529563021893-cc83c992d75d?w=500&h=340&fit=crop&auto=format"
-            alt="Sate Ayam Madura"
+            alt="Sate Maranggi"
             className="rounded-2xl object-cover flex-shrink-0"
             style={{ width: 'clamp(110px, 15vw, 190px)', height: 'clamp(76px, 10vw, 130px)' }}
           />
@@ -339,7 +353,7 @@ export default function HeroPage() {
                 color: colors.creamAlpha(0.6),
               }}
             >
-              Pelanggan sudah menikmati sajian nusantara kami
+              Pelanggan sudah menikmati sajian Sunda & Betawi kami
             </p>
           </div>
         </div>

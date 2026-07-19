@@ -16,7 +16,7 @@ const VALUES = [
     icon: Heart,
     bg: '#A85C34',
     title: 'Resep Warisan',
-    text: 'Diracik dari resep keluarga turun-temurun yang dijaga keasliannya.',
+    text: 'Diracik dari resep keluarga Sunda dan Betawi turun-temurun yang dijaga keasliannya.',
   },
   {
     icon: Sparkles,
@@ -33,27 +33,27 @@ const VALUES = [
 ];
 
 const TIMELINE = [
-  { year: '2014', title: 'Warung Kecil di Kampung', text: 'RasaNusa berawal dari warung sederhana dengan resep rumahan.' },
-  { year: '2018', title: 'Ekspansi Menu Nusantara', text: 'Menambah menu dari berbagai daerah, dari Sabang sampai Merauke.' },
-  { year: '2021', title: 'Membuka Cabang Pertama', text: 'Antusiasme pelanggan mendorong RasaNusa membuka gerai kedua.' },
-  { year: '2026', title: 'Rumah Rasa Nusantara', text: 'Kini dipercaya lebih dari 14.000 pelanggan di seluruh kota.' },
+  { year: '2014', title: 'Saung Kecil di Kampung', text: 'Saung Baraya berawal dari saung sederhana dengan resep Sunda rumahan.' },
+  { year: '2018', title: 'Menambah Cita Rasa Betawi', text: 'Menu diperluas dengan hidangan khas Betawi, dari soto hingga kerak telor.' },
+  { year: '2021', title: 'Membuka Cabang Pertama', text: 'Antusiasme pelanggan mendorong Saung Baraya membuka gerai kedua.' },
+  { year: '2026', title: 'Rumah Rasa Sunda & Betawi', text: 'Kini dipercaya lebih dari 14.000 pelanggan di seluruh kota.' },
 ];
 
 const TEAM = [
   {
     name: 'Chef Wibowo Santoso',
     role: 'Kepala Dapur',
-    image: 'https://images.unsplash.com/photo-1583394293214-28ded15ee548?w=500&h=600&fit=crop&auto=format',
+    image: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=500&h=600&q=80&fm=jpg&fit=crop',
   },
   {
     name: 'Chef Ayu Kartika',
-    role: 'Chef Nusantara',
-    image: 'https://images.unsplash.com/photo-1595475884562-073c30d45670?w=500&h=600&fit=crop&auto=format',
+    role: 'Chef Sunda & Betawi',
+    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=500&h=600&q=80&fm=jpg&fit=crop',
   },
   {
     name: 'Rio Hidayat',
     role: 'Manajer Operasional',
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=500&h=600&fit=crop&auto=format',
+    image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=500&h=600&q=80&fm=jpg&fit=crop',
   },
 ];
 
@@ -72,9 +72,9 @@ export default function AboutPage() {
 
       <PageHero
         eyebrow="Tentang Kami"
-        words={['Dapur', 'yang', 'Merawat', 'Cita', 'Rasa', 'Rumah']}
-        subtitle="RasaNusa lahir dari kerinduan akan masakan rumahan otentik, disajikan dengan bahan segar dan resep warisan nusantara."
-        bgImage="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=1600&q=85&auto=format&fit=crop"
+        words={['Saung', 'yang', 'Merawat', 'Cita', 'Rasa', 'Baraya']}
+        subtitle="Saung Baraya lahir dari kerinduan akan masakan Sunda dan Betawi otentik, disajikan dengan bahan segar dan resep warisan leluhur."
+        bgImage="https://images.unsplash.com/photo-1555126634-323283e090fa?w=1600&q=80&fm=jpg&fit=crop"
       />
 
       {/* ================= STORY ================= */}
@@ -97,7 +97,7 @@ export default function AboutPage() {
                 color: colors.cream,
               }}
             >
-              Dari dapur rumah ke meja makan ribuan keluarga
+              Dari saung kampung ke meja makan ribuan baraya
             </h2>
             <p
               className="mt-5"
@@ -108,9 +108,10 @@ export default function AboutPage() {
                 letterSpacing: '-0.01em',
               }}
             >
-              Berawal dari kecintaan pada masakan rumahan, RasaNusa didirikan dengan satu tujuan sederhana:
-              menghadirkan kembali kehangatan meja makan keluarga Indonesia. Setiap hidangan diracik dengan
-              rempah pilihan dan dimasak dengan kesabaran, persis seperti masakan ibu di rumah.
+              Berawal dari kecintaan pada masakan Sunda dan Betawi, Saung Baraya didirikan dengan satu
+              tujuan sederhana: menghadirkan kembali kehangatan meja makan ala kampung halaman. Setiap
+              hidangan diracik dengan bumbu pilihan dan dimasak dengan kesabaran, persis seperti masakan
+              emak di rumah.
             </p>
             <div
               className="mt-8 flex items-start gap-4 rounded-2xl p-5"
@@ -118,15 +119,15 @@ export default function AboutPage() {
             >
               <Quote size={28} color={colors.accent} className="flex-shrink-0" />
               <p style={{ color: colors.creamAlpha(0.85), fontSize: 15, lineHeight: 1.6, fontStyle: 'italic' }}>
-                "Kami percaya makanan terbaik adalah yang mengingatkan kita pada rumah."
+                "Kami percaya masakan terbaik adalah yang mengingatkan kita pada kampung halaman."
               </p>
             </div>
           </div>
 
           <div className="relative animate-scale-in delay-200">
             <img
-              src="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=900&h=1100&fit=crop&auto=format"
-              alt="Dapur RasaNusa"
+              src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=900&h=1100&q=80&fm=jpg&fit=crop"
+              alt="Dapur Saung Baraya"
               className="w-full rounded-3xl object-cover"
               style={{ height: 'clamp(320px, 42vw, 520px)', border: `1px solid ${colors.creamAlpha(0.12)}` }}
             />
@@ -137,7 +138,7 @@ export default function AboutPage() {
               <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: 32, letterSpacing: '-0.04em', color: colors.ink }}>
                 12+
               </p>
-              <p style={{ fontSize: 12, color: colors.inkAlpha(0.6) }}>Tahun melayani nusantara</p>
+              <p style={{ fontSize: 12, color: colors.inkAlpha(0.6) }}>Tahun melayani Sunda & Betawi</p>
             </div>
           </div>
         </div>
@@ -208,7 +209,7 @@ export default function AboutPage() {
             color: colors.cream,
           }}
         >
-          Dari warung kecil menjadi rumah rasa nusantara
+          Dari saung kecil menjadi rumah rasa Sunda & Betawi
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-10">
@@ -292,7 +293,7 @@ export default function AboutPage() {
           </div>
           <div className="flex items-center gap-2" style={{ color: colors.creamAlpha(0.6) }}>
             <Award size={18} color={colors.accent} />
-            <span className="text-sm">Top Rated Nusantara Food 2025</span>
+            <span className="text-sm">Top Rated Sunda & Betawi Food 2025</span>
           </div>
           <div className="flex items-center gap-2" style={{ color: colors.creamAlpha(0.6) }}>
             <Award size={18} color={colors.accent} />

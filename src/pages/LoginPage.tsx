@@ -192,7 +192,7 @@ export default function LoginPage() {
             className="text-xs font-semibold uppercase tracking-[0.2em] mb-2"
             style={{ color: '#D9A441' }}
           >
-            RasaNusa
+            Saung Baraya
           </p>
           <h1
             className="uppercase"
@@ -207,7 +207,7 @@ export default function LoginPage() {
             Masuk ke Sistem
           </h1>
           <p className="text-sm mt-2" style={{ color: 'rgba(243,234,217,0.6)' }}>
-            Untuk admin dan pelanggan setia RasaNusa.
+            Untuk admin dan pelanggan setia Saung Baraya.
           </p>
         </div>
 

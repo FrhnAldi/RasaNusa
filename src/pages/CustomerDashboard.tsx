@@ -308,7 +308,7 @@ export default function CustomerDashboard() {
     }
   };
 
-  const firstName = user?.name.split(' ')[0] ?? 'Sahabat RasaNusa';
+  const firstName = user?.name.split(' ')[0] ?? 'Sahabat Saung Baraya';
 
   return (
     <div
@@ -338,7 +338,7 @@ export default function CustomerDashboard() {
             className="hidden sm:block"
             style={{ fontFamily: "'Anton', sans-serif", color: CREAM, fontSize: 22, letterSpacing: '-0.01em' }}
           >
-            RasaNusa
+            Saung Baraya
           </Link>
           <div className="h-5 w-px hidden sm:block" style={{ backgroundColor: creamAlpha(0.15) }} />
           <h1 className="text-sm sm:text-base font-light" style={{ color: creamAlpha(0.85) }}>
@@ -387,7 +387,7 @@ export default function CustomerDashboard() {
           style={{ border: '1px solid rgba(217,163,95,0.14)' }}
         >
           <img
-            src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&q=80&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1707269561481-a4a0370a980a?w=1600&q=80&auto=format&fit=crop"
             alt=""
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover"
@@ -445,7 +445,7 @@ export default function CustomerDashboard() {
                   lineHeight: 1.1,
                 }}
               >
-                Sajian{' '}
+                Rasa{' '}
                 <span
                   style={{
                     background: GRADIENT,
@@ -454,9 +454,9 @@ export default function CustomerDashboard() {
                     color: 'transparent',
                   }}
                 >
-                  Istimewa
+                  Asli
                 </span>{' '}
-                Nusantara, Selamat Datang{' '}
+                Sunda & Betawi, Wilujeng Sumping{' '}
                 <span
                   style={{
                     background: GRADIENT,
@@ -470,7 +470,7 @@ export default function CustomerDashboard() {
               </h2>
               <p className="text-sm mt-3 max-w-md font-light leading-relaxed" style={{ color: creamAlpha(0.6) }}>
                 Pesan menu favoritmu langsung dari sini, kumpulkan poin, dan nikmati promo spesial
-                untuk anggota RasaNusa.
+                untuk anggota Saung Baraya.
               </p>
               <div className="flex flex-wrap items-center gap-3 mt-5">
                 <a
@@ -514,8 +514,8 @@ export default function CustomerDashboard() {
                 }}
               >
                 <img
-                  src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=700&h=880&fit=crop&auto=format"
-                  alt="Nasi Goreng Kampung — menu andalan RasaNusa"
+                  src="https://images.unsplash.com/photo-1707269561481-a4a0370a980a?w=700&h=880&fit=crop&auto=format"
+                  alt="Nasi Timbel Komplit — menu andalan Saung Baraya"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div
@@ -546,7 +546,7 @@ export default function CustomerDashboard() {
                       Pilihan Chef
                     </span>
                     <span className="block mt-1 text-sm font-medium" style={{ color: CREAM, fontFamily: SERIF }}>
-                      Nasi Goreng Kampung Spesial
+                      Nasi Timbel Komplit
                     </span>
                   </p>
                 </div>
@@ -565,7 +565,7 @@ export default function CustomerDashboard() {
                 <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0">
                   <img
                     src="https://images.unsplash.com/photo-1529563021893-cc83c992d75d?w=120&h=120&fit=crop&auto=format"
-                    alt="Sate Ayam Madura"
+                    alt="Sate Maranggi"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -574,7 +574,7 @@ export default function CustomerDashboard() {
                     Rasa autentik, siap disantap
                   </p>
                   <p className="text-xs font-semibold" style={{ color: GOLD }}>
-                    Sate Ayam Madura
+                    Sate Maranggi
                   </p>
                 </div>
               </div>
@@ -632,7 +632,7 @@ export default function CustomerDashboard() {
                     <Star size={13} /> Sorotan Kami
                   </p>
                   <h3 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 'clamp(20px, 2.6vw, 28px)', color: CREAM, letterSpacing: '-0.01em' }}>
-                    Menu Favorit Pelanggan RasaNusa
+                    Menu Favorit Pelanggan Saung Baraya
                   </h3>
                 </div>
                 <a
@@ -694,8 +694,8 @@ export default function CustomerDashboard() {
         >
           <div className="relative h-[280px] sm:h-[340px]">
             <img
-              src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1600&h=800&fit=crop&auto=format"
-              alt="Suasana hangat RasaNusa"
+              src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1600&h=800&fit=crop&auto=format"
+              alt="Suasana hangat Saung Baraya"
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div
@@ -718,7 +718,7 @@ export default function CustomerDashboard() {
                 className="text-xs font-semibold uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5"
                 style={{ color: GOLD }}
               >
-                <ChefHat size={13} /> Racikan Chef Kami
+                <ChefHat size={13} /> Racikan Dapur Kami
               </p>
               <h2
                 style={{
@@ -739,12 +739,12 @@ export default function CustomerDashboard() {
                     color: 'transparent',
                   }}
                 >
-                  Rasa Nusantara
+                  Tanah Pasundan & Betawi
                 </span>
               </h2>
               <p className="text-sm mt-3 font-light leading-relaxed" style={{ color: creamAlpha(0.65) }}>
-                Dari rempah pilihan hingga teknik memasak turun-temurun, jelajahi menu yang kami
-                siapkan dengan penuh dedikasi untukmu.
+                Dari rempah pilihan hingga resep turun-temurun, jelajahi menu Sunda dan Betawi yang
+                kami siapkan dengan penuh dedikasi untukmu.
               </p>
               <a
                 href="#menu"

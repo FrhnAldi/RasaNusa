@@ -113,7 +113,7 @@ export default function AdminDashboard() {
             <h1
               style={{ fontFamily: "'Anton', sans-serif", color: CREAM, fontSize: 17, letterSpacing: '-0.01em', lineHeight: 1 }}
             >
-              RasaNusa <span style={{ color: GOLD }}>Admin</span>
+              Saung Baraya <span style={{ color: GOLD }}>Admin</span>
             </h1>
             <p className="text-[11px] font-light hidden sm:block mt-0.5" style={{ color: MUTED }}>
               Halo, <span style={{ color: CREAM, fontWeight: 500 }}>{user?.name ?? 'Admin'}</span>
@@ -175,7 +175,7 @@ export default function AdminDashboard() {
                     color: 'transparent',
                   }}
                 >
-                  RasaNusa
+                  Saung Baraya
                 </span>
               </h2>
               <p className="text-sm mt-2 max-w-md font-light leading-relaxed" style={{ color: MUTED }}>

@@ -9,7 +9,7 @@ import type {
   OrderType,
   OrderStatus,
 } from '../types/pos';
-import { INITIAL_PRODUCTS } from '../data/products';
+import { INITIAL_PRODUCTS, PRODUCT_CATALOG_VERSION } from '../data/products';
 
 const STORAGE_KEY = 'rasanusa_data_v1';
 
@@ -17,6 +17,7 @@ interface StoredShape {
   products: Product[];
   transactions: Transaction[];
   stockLogs: StockLog[];
+  catalogVersion?: number;
 }
 
 interface RecordTransactionInput {
@@ -75,19 +76,50 @@ function withStatusDefaults(transactions: Transaction[]): Transaction[] {
   );
 }
 
+/**
+ * Menus already saved in localStorage (customer/admin dashboards) can drift from the
+ * source-of-truth catalog in products.ts — e.g. when a menu photo gets fixed. This
+ * re-applies the latest seed fields (name, image, price, category, description, badge)
+ * for every product that's still part of the seed catalog, while keeping the stock
+ * count the user has locally tracked. Custom products an admin added (ids outside the
+ * seed catalog) are preserved as-is.
+ */
+function mergeWithLatestCatalog(storedProducts: Product[]): Product[] {
+  const storedMap = new Map(storedProducts.map((p) => [p.id, p]));
+  const resynced = INITIAL_PRODUCTS.map((seed) => {
+    const stored = storedMap.get(seed.id);
+    return stored ? { ...seed, stock: stored.stock } : seed;
+  });
+  const customProducts = storedProducts.filter(
+    (p) => !INITIAL_PRODUCTS.some((seed) => seed.id === p.id)
+  );
+  return [...customProducts, ...resynced];
+}
+
 function loadInitial(): StoredShape {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as StoredShape;
       if (parsed && Array.isArray(parsed.products)) {
-        return { ...parsed, transactions: withStatusDefaults(parsed.transactions ?? []) };
+        const needsSync = parsed.catalogVersion !== PRODUCT_CATALOG_VERSION;
+        return {
+          ...parsed,
+          products: needsSync ? mergeWithLatestCatalog(parsed.products) : parsed.products,
+          transactions: withStatusDefaults(parsed.transactions ?? []),
+          catalogVersion: PRODUCT_CATALOG_VERSION,
+        };
       }
     }
   } catch {
     // ignore malformed storage
   }
-  return { products: INITIAL_PRODUCTS, transactions: [], stockLogs: [] };
+  return {
+    products: INITIAL_PRODUCTS,
+    transactions: [],
+    stockLogs: [],
+    catalogVersion: PRODUCT_CATALOG_VERSION,
+  };
 }
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
@@ -110,7 +142,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = JSON.parse(event.newValue) as StoredShape;
         if (parsed && Array.isArray(parsed.products)) {
-          setState({ ...parsed, transactions: withStatusDefaults(parsed.transactions ?? []) });
+          const needsSync = parsed.catalogVersion !== PRODUCT_CATALOG_VERSION;
+          setState({
+            ...parsed,
+            products: needsSync ? mergeWithLatestCatalog(parsed.products) : parsed.products,
+            transactions: withStatusDefaults(parsed.transactions ?? []),
+            catalogVersion: PRODUCT_CATALOG_VERSION,
+          });
         }
       } catch {
         // ignore malformed cross-tab payloads
@@ -241,7 +279,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   };
 
   const resetData = () => {
-    setState({ products: INITIAL_PRODUCTS, transactions: [], stockLogs: [] });
+    setState({
+      products: INITIAL_PRODUCTS,
+      transactions: [],
+      stockLogs: [],
+      catalogVersion: PRODUCT_CATALOG_VERSION,
+    });
   };
 
   return (

@@ -53,8 +53,8 @@ export default function PromoPage() {
       <PageHero
         eyebrow="Promo &amp; Penawaran"
         words={['Nikmati', 'Lebih', 'Hemat', 'Setiap', 'Hari']}
-        subtitle="Dari diskon harian sampai paket keluarga, ada banyak cara untuk menikmati cita rasa nusantara dengan lebih hemat."
-        bgImage="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=85&auto=format&fit=crop"
+        subtitle="Dari diskon harian sampai paket keluarga, ada banyak cara untuk menikmati cita rasa Sunda dan Betawi dengan lebih hemat."
+        bgImage="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1600&q=80&fm=jpg&fit=crop"
       />
 
       {/* ================= FLASH SALE COUNTDOWN ================= */}
@@ -222,7 +222,7 @@ export default function PromoPage() {
           className="px-7 py-3.5 rounded-md bg-black text-white animate-fade-up delay-200 flex-shrink-0"
           style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}
         >
-          Gabung Member RasaNusa
+          Gabung Member Saung Baraya
         </a>
       </section>
 

@@ -40,9 +40,9 @@ export default function MenuPage() {
 
       <PageHero
         eyebrow="Menu Kami"
-        words={['Ragam', 'Rasa', 'dari', 'Sabang', 'sampai', 'Merauke']}
-        subtitle="Setiap hidangan dimasak segar setiap hari, dari makanan berat, camilan, minuman, hingga dessert penutup."
-        bgImage="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=85&auto=format&fit=crop"
+        words={['Ragam', 'Rasa', 'Sunda', 'dan', 'Betawi']}
+        subtitle="Setiap hidangan dimasak segar setiap hari, dari makanan berat, camilan, minuman, hingga dessert penutup khas Pasundan dan Betawi."
+        bgImage="https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1600&q=80&fm=jpg&fit=crop"
       />
 
       {/* ================= FILTER + GRID ================= */}
@@ -163,14 +163,14 @@ export default function MenuPage() {
             color: '#15100C',
           }}
         >
-          Ingin menikmati hidangan ini langsung dari dapur kami?
+          Ingin menikmati hidangan ini langsung dari saung kami?
         </p>
         <a
           href="#kontak"
           className="px-7 py-3.5 rounded-md bg-black text-white animate-fade-up delay-200 flex-shrink-0"
           style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500 }}
         >
-          Kunjungi Restoran Kami
+          Kunjungi Saung Kami
         </a>
       </section>
 
