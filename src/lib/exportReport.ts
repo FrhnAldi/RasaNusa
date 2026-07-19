@@ -173,3 +173,193 @@ export function exportTransactionsToPDF(transactions: Transaction[]) {
 
   doc.save(reportFilename('pdf'));
 }
+
+function receiptFilename(orderId: string) {
+  const stamp = new Date().toISOString().slice(0, 10);
+  const safeId = orderId.replace(/[^a-zA-Z0-9-]/g, '');
+  return `Struk-RasaNusa-${safeId}-${stamp}.pdf`;
+}
+
+/** Minimal shape needed to render a customer receipt — works for both a
+ *  freshly-placed order (OrderSuccessModal) and a historical Transaction
+ *  pulled from order history (CustomerDashboard). */
+export interface ReceiptData {
+  orderId: string;
+  items: { name: string; quantity: number; price: number; note?: string }[];
+  subtotal: number;
+  tax: number;
+  discount?: number;
+  promoCode?: string | null;
+  total: number;
+  orderType?: 'dine-in' | 'takeaway';
+  tableNumber?: string;
+  paymentMethod: string;
+  customerName?: string;
+  timestamp: number;
+  status?: string;
+}
+
+/**
+ * Renders a single order as a narrow, receipt-style PDF (80mm thermal-paper
+ * width) and triggers a browser download. Meant for customers to keep a
+ * copy of their order — mirrors what's shown in OrderSuccessModal / the
+ * order history card, but as a document they can save or print.
+ */
+export function exportReceiptToPDF(receipt: ReceiptData) {
+  const PAGE_WIDTH = 227; // ~80mm thermal receipt width, in pt
+  const MARGIN = 14;
+  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+
+  // Estimate page height from content so nothing gets cut off — a fixed
+  // short page is exactly the "kepotong" problem we're avoiding here.
+  const lineCount =
+    10 + // header block (brand, title, order id, date, divider, order type/table, payment, divider)
+    receipt.items.reduce((sum, i) => sum + 1 + (i.note ? 1 : 0), 0) +
+    1 + // divider
+    3 + // subtotal, discount?, tax
+    (receipt.discount && receipt.discount > 0 ? 1 : 0) +
+    3 + // divider, total, divider
+    4; // footer lines
+  const estimatedHeight = Math.max(320, lineCount * 14 + 120);
+
+  const doc = new jsPDF({ unit: 'pt', format: [PAGE_WIDTH, estimatedHeight] });
+
+  let y = 24;
+  const centerX = PAGE_WIDTH / 2;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('RasaNusa', centerX, y, { align: 'center' });
+  y += 14;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(90);
+  doc.text('Sajian Istimewa Nusantara', centerX, y, { align: 'center' });
+  y += 16;
+
+  doc.setDrawColor(200);
+  doc.setLineDashPattern([2, 1.5], 0);
+  doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+  y += 14;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(20);
+  doc.text(`Pesanan ${receipt.orderId}`, MARGIN, y);
+  y += 12;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(90);
+  const dateLabel = new Date(receipt.timestamp).toLocaleString('id-ID', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+  doc.text(dateLabel, MARGIN, y);
+  y += 10;
+
+  if (receipt.customerName) {
+    doc.text(`Pelanggan: ${receipt.customerName}`, MARGIN, y);
+    y += 10;
+  }
+
+  const orderTypeLabel =
+    receipt.orderType === 'takeaway'
+      ? 'Bawa Pulang'
+      : receipt.tableNumber
+        ? `Dine-in · Meja ${receipt.tableNumber}`
+        : receipt.orderType === 'dine-in'
+          ? 'Dine-in'
+          : null;
+  if (orderTypeLabel) {
+    doc.text(orderTypeLabel, MARGIN, y);
+    y += 10;
+  }
+
+  const paymentLabelMap: Record<string, string> = {
+    tunai: 'Tunai di Kasir',
+    qris: 'QRIS',
+    kartu: 'Kartu',
+    ewallet: 'E-Wallet',
+  };
+  doc.text(`Pembayaran: ${paymentLabelMap[receipt.paymentMethod] ?? receipt.paymentMethod}`, MARGIN, y);
+  y += 10;
+
+  if (receipt.status) {
+    const statusLabel = ORDER_STATUS_META[receipt.status as keyof typeof ORDER_STATUS_META]?.label ?? receipt.status;
+    doc.text(`Status: ${statusLabel}`, MARGIN, y);
+    y += 10;
+  }
+
+  y += 4;
+  doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+  y += 14;
+
+  // Line items
+  doc.setFontSize(8);
+  receipt.items.forEach((item) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(20);
+    const nameLines = doc.splitTextToSize(`${item.quantity}x ${item.name}`, CONTENT_WIDTH - 55);
+    doc.text(nameLines, MARGIN, y);
+    doc.text(formatIDR(item.price * item.quantity), PAGE_WIDTH - MARGIN, y, { align: 'right' });
+    y += 11 * nameLines.length;
+
+    if (item.note) {
+      doc.setFontSize(7);
+      doc.setTextColor(120);
+      const noteLines = doc.splitTextToSize(`Catatan: ${item.note}`, CONTENT_WIDTH - 10);
+      doc.text(noteLines, MARGIN + 6, y);
+      y += 9 * noteLines.length;
+      doc.setFontSize(8);
+    }
+  });
+
+  y += 4;
+  doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+  y += 14;
+
+  // Totals block
+  doc.setFontSize(8);
+  doc.setTextColor(60);
+  doc.text('Subtotal', MARGIN, y);
+  doc.text(formatIDR(receipt.subtotal), PAGE_WIDTH - MARGIN, y, { align: 'right' });
+  y += 12;
+
+  if (receipt.discount && receipt.discount > 0) {
+    doc.setTextColor(90, 150, 100);
+    const discountLabel = receipt.promoCode ? `Diskon (${receipt.promoCode})` : 'Diskon Promo';
+    doc.text(discountLabel, MARGIN, y);
+    doc.text(`-${formatIDR(receipt.discount)}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
+    y += 12;
+    doc.setTextColor(60);
+  }
+
+  doc.text('Pajak (10%)', MARGIN, y);
+  doc.text(formatIDR(receipt.tax), PAGE_WIDTH - MARGIN, y, { align: 'right' });
+  y += 10;
+
+  y += 4;
+  doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+  y += 16;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(20);
+  doc.text('TOTAL', MARGIN, y);
+  doc.text(formatIDR(receipt.total), PAGE_WIDTH - MARGIN, y, { align: 'right' });
+  y += 14;
+
+  doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+  y += 20;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(110);
+  doc.text('Terima kasih telah memesan di RasaNusa!', centerX, y, { align: 'center' });
+  y += 11;
+  doc.text('Struk ini adalah bukti pembayaran yang sah.', centerX, y, { align: 'center' });
+
+  doc.save(receiptFilename(receipt.orderId));
+}

@@ -6,6 +6,7 @@ import {
   ChefHat,
   ChevronDown,
   Clock3,
+  Download,
   Heart,
   LogOut,
   MessageSquareText,
@@ -278,6 +279,32 @@ export default function CustomerDashboard() {
   const handleDeleteOrder = (orderId: string) => {
     if (confirm('Hapus riwayat pesanan ini? Tindakan ini tidak dapat dibatalkan.')) {
       removeTransaction(orderId);
+    }
+  };
+
+  const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
+
+  const handlePrintReceipt = async (order: (typeof myOrders)[number]) => {
+    setPrintingOrderId(order.id);
+    try {
+      const { exportReceiptToPDF } = await import('../lib/exportReport');
+      exportReceiptToPDF({
+        orderId: order.id,
+        items: order.items.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price, note: i.note })),
+        subtotal: order.subtotal,
+        tax: order.tax,
+        discount: order.discount,
+        promoCode: order.promoCode,
+        total: order.total,
+        orderType: order.orderType,
+        tableNumber: order.tableNumber,
+        paymentMethod: order.paymentMethod,
+        customerName: order.customerName,
+        timestamp: order.timestamp,
+        status: order.status,
+      });
+    } finally {
+      setPrintingOrderId(null);
     }
   };
 
@@ -865,6 +892,18 @@ export default function CustomerDashboard() {
                           <StatusIcon size={10} /> {statusMeta.shortLabel}
                         </span>
                       </div>
+                      <button
+                        onClick={() => handlePrintReceipt(order)}
+                        disabled={printingOrderId === order.id}
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10 disabled:opacity-50"
+                        style={{ color: creamAlpha(0.35) }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = GOLD)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = creamAlpha(0.35))}
+                        aria-label="Cetak struk sebagai PDF"
+                        title="Cetak struk PDF"
+                      >
+                        <Download size={14} />
+                      </button>
                       <button
                         onClick={() => handleDeleteOrder(order.id)}
                         className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10"

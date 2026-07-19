@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Clock3, MessageSquareText, Tag } from 'lucide-react';
+import { CheckCircle2, Clock3, Download, MessageSquareText, Tag } from 'lucide-react';
 import { formatIDR } from '../../data/products';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -61,6 +61,7 @@ export default function OrderSuccessModal({
   const { ink: BLACK, cream: CREAM, creamAlpha, inkAlpha } = colors;
   const MUTED = creamAlpha(0.55);
   const [secondsLeft, setSecondsLeft] = useState(QRIS_DURATION_SECONDS);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
     if (paymentMethod !== 'qris') return;
@@ -78,8 +79,30 @@ export default function OrderSuccessModal({
 
   const qrisExpired = paymentMethod === 'qris' && secondsLeft === 0;
 
+  const handlePrintReceipt = async () => {
+    setIsPrinting(true);
+    try {
+      const { exportReceiptToPDF } = await import('../../lib/exportReport');
+      exportReceiptToPDF({
+        orderId,
+        items,
+        subtotal,
+        tax,
+        discount,
+        promoCode,
+        total,
+        orderType,
+        tableNumber,
+        paymentMethod: paymentMethod ?? 'tunai',
+        timestamp: Date.now(),
+      });
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-4 sm:py-6">
       <style>{`
         @keyframes os-pop {
           0% { transform: scale(0.92); opacity: 0; }
@@ -103,7 +126,7 @@ export default function OrderSuccessModal({
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(217,163,95,0.28)',
           boxShadow: '0 30px 70px -20px rgba(0,0,0,0.65), 0 0 40px rgba(217,163,95,0.1)',
-          maxHeight: '90vh',
+          maxHeight: 'min(90vh, 720px)',
         }}
       >
         <div
@@ -112,17 +135,18 @@ export default function OrderSuccessModal({
         />
 
         {/* Header */}
-        <div className="relative flex flex-col items-center text-center px-6 pt-8 pb-4 flex-shrink-0">
-          <div className="relative mb-4 w-14 h-14 flex items-center justify-center">
+        <div className="relative flex flex-col items-center text-center px-6 pt-6 sm:pt-8 pb-3 sm:pb-4 flex-shrink-0">
+          <div className="relative mb-3 sm:mb-4 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
             <span
               className="absolute inset-0 rounded-full"
               style={{ border: `2px solid ${GOLD}`, animation: 'os-ring 1.6s ease-out infinite' }}
             />
             <div
-              className="w-14 h-14 rounded-full flex items-center justify-center"
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
               style={{ background: 'rgba(217,163,95,0.14)', border: '1px solid rgba(217,163,95,0.3)' }}
             >
-              <CheckCircle2 size={28} style={{ color: GOLD }} />
+              <CheckCircle2 size={24} className="sm:hidden" style={{ color: GOLD }} />
+              <CheckCircle2 size={28} className="hidden sm:block" style={{ color: GOLD }} />
             </div>
           </div>
 
@@ -139,13 +163,13 @@ export default function OrderSuccessModal({
           >
             <Clock3 size={11} /> Menunggu Konfirmasi
           </span>
-          <p className="text-[11px] mt-2 font-light" style={{ color: creamAlpha(0.4), fontFamily: 'Inter, sans-serif' }}>
+          <p className="text-[11px] mt-2 font-light hidden sm:block" style={{ color: creamAlpha(0.4), fontFamily: 'Inter, sans-serif' }}>
             Pantau perkembangan status pesanan Anda secara real-time di bagian Riwayat Pesanan.
           </p>
         </div>
 
         {/* Scrollable review body */}
-        <div className="relative flex-1 min-h-0 overflow-y-auto px-6">
+        <div className="relative flex-1 min-h-0 overflow-y-auto px-6 pt-1">
           <div className="flex items-center justify-between mb-2.5">
             <p
               className="text-[11px] font-medium uppercase tracking-[0.16em]"
@@ -224,20 +248,20 @@ export default function OrderSuccessModal({
 
           {paymentMethod === 'qris' && (
             <div
-              className="flex flex-col items-center rounded-2xl px-4 py-5 mb-4"
+              className="flex flex-col items-center rounded-2xl px-4 py-3.5 sm:py-5 mb-4"
               style={{
                 backgroundColor: creamAlpha(0.04),
                 border: `1px solid ${qrisExpired ? 'rgba(196,67,43,0.35)' : 'rgba(217,163,95,0.25)'}`,
               }}
             >
               <p
-                className="text-[11px] font-medium uppercase tracking-[0.16em] mb-3"
+                className="text-[11px] font-medium uppercase tracking-[0.16em] mb-2.5 sm:mb-3"
                 style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}
               >
                 Scan untuk Bayar
               </p>
               <div
-                className="rounded-xl p-2.5 transition-opacity duration-500"
+                className="rounded-xl p-2 sm:p-2.5 transition-opacity duration-500"
                 style={{
                   backgroundColor: '#FFFFFF',
                   boxShadow: '0 0 24px rgba(217,163,95,0.15)',
@@ -247,11 +271,11 @@ export default function OrderSuccessModal({
                 <img
                   src={`${import.meta.env.BASE_URL}qris.png`}
                   alt="Kode QRIS"
-                  className="w-44 h-44 object-contain block"
+                  className="w-32 h-32 sm:w-44 sm:h-44 object-contain block"
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 mt-3.5">
+              <div className="flex items-center gap-1.5 mt-3 sm:mt-3.5">
                 <Clock3 size={13} style={{ color: qrisExpired ? '#E8836C' : GOLD }} />
                 <span
                   className="text-xs font-semibold"
@@ -274,7 +298,7 @@ export default function OrderSuccessModal({
               </div>
 
               <p
-                className="text-[11px] mt-3 font-light text-center leading-relaxed"
+                className="text-[11px] mt-2.5 sm:mt-3 font-light text-center leading-relaxed hidden sm:block"
                 style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}
               >
                 {qrisExpired
@@ -315,9 +339,9 @@ export default function OrderSuccessModal({
         </div>
 
         {/* Footer total + CTA */}
-        <div className="relative px-6 pt-4 pb-6 flex-shrink-0" style={{ borderTop: `1px solid ${creamAlpha(0.08)}` }}>
+        <div className="relative px-6 pt-3 sm:pt-4 pb-4 sm:pb-6 flex-shrink-0" style={{ borderTop: `1px solid ${creamAlpha(0.08)}` }}>
           <div
-            className="w-full rounded-2xl px-4 py-3.5 flex items-center justify-between mb-4"
+            className="w-full rounded-2xl px-4 py-3 sm:py-3.5 flex items-center justify-between mb-3 sm:mb-4"
             style={{ backgroundColor: creamAlpha(0.04), border: `1px solid ${creamAlpha(0.1)}`, backdropFilter: 'blur(6px)' }}
           >
             <span className="text-xs font-light" style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}>
@@ -336,7 +360,7 @@ export default function OrderSuccessModal({
             </span>
           </div>
 
-          <p className="text-[11px] mb-4 font-light text-center" style={{ color: creamAlpha(0.4), fontFamily: 'Inter, sans-serif' }}>
+          <p className="text-[11px] mb-3 sm:mb-4 font-light text-center hidden sm:block" style={{ color: creamAlpha(0.4), fontFamily: 'Inter, sans-serif' }}>
             {qrisExpired
               ? 'Kode QRIS kedaluwarsa — tunjukkan halaman ini ke kasir untuk membuat ulang pembayaran.'
               : paymentMethod === 'qris'
@@ -344,13 +368,25 @@ export default function OrderSuccessModal({
                 : 'Tunjukkan halaman ini ke kasir untuk konfirmasi pembayaran.'}
           </p>
 
-          <button
-            onClick={onClose}
-            className="w-full font-semibold py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
-            style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
-          >
-            Selesai
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrintReceipt}
+              disabled={isPrinting}
+              className="flex-shrink-0 flex items-center justify-center gap-1.5 px-4 font-semibold text-xs py-3 sm:py-3.5 rounded-xl transition-all duration-300 hover:bg-white/5 disabled:opacity-60"
+              style={{ border: `1px solid ${creamAlpha(0.18)}`, color: CREAM }}
+              aria-label="Cetak struk sebagai PDF"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">{isPrinting ? 'Menyiapkan...' : 'Cetak Struk'}</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 font-semibold py-3 sm:py-3.5 rounded-xl transition-all duration-500 hover:scale-[1.015]"
+              style={{ background: GRADIENT, color: BLACK, boxShadow: '0 8px 30px -8px rgba(217,163,95,0.45)' }}
+            >
+              Selesai
+            </button>
+          </div>
         </div>
       </div>
     </div>
