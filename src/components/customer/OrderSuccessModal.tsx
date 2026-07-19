@@ -114,7 +114,7 @@ export default function OrderSuccessModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 py-4 sm:py-6 overflow-y-auto">
+    <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 py-4 sm:py-6 overflow-y-auto os-modal-scroll">
       <style>{`
         @keyframes os-pop {
           0% { transform: scale(0.92); opacity: 0; }
@@ -128,6 +128,15 @@ export default function OrderSuccessModal({
           0% { transform: translateX(24px); opacity: 0; }
           100% { transform: translateX(0); opacity: 1; }
         }
+        .os-modal-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .os-modal-scroll::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
+        }
       `}</style>
       <div
         className="fixed inset-0"
@@ -135,7 +144,7 @@ export default function OrderSuccessModal({
         onClick={onClose}
       />
       <div
-        className="relative overflow-hidden rounded-3xl w-full max-w-md flex flex-col my-auto"
+        className="relative overflow-y-auto overflow-x-hidden rounded-3xl w-full max-w-md flex flex-col my-auto os-modal-scroll"
         style={{
           animation: 'os-pop 450ms cubic-bezier(0.22, 1, 0.36, 1)',
           backgroundColor: inkAlpha(0.92),
@@ -184,7 +193,7 @@ export default function OrderSuccessModal({
             </div>
 
             {/* Scrollable review body */}
-            <div className="relative flex-1 min-h-0 overflow-y-auto px-6 pt-1">
+            <div className="relative flex-1 min-h-0 overflow-y-auto px-6 pt-1 os-modal-scroll">
               <div className="flex items-center justify-between mb-2.5">
                 <p
                   className="text-[11px] font-medium uppercase tracking-[0.16em]"
