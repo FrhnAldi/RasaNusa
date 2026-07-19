@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Sparkles,
   Star,
+  Trash2,
   Utensils,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -56,7 +57,7 @@ function tierFromOrders(orderCount: number) {
 
 export default function CustomerDashboard() {
   const { user, logout } = useAuth();
-  const { products, transactions, recordTransaction } = useAppData();
+  const { products, transactions, recordTransaction, removeTransaction } = useAppData();
   const navigate = useNavigate();
 
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -245,6 +246,12 @@ export default function CustomerDashboard() {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    if (confirm('Hapus riwayat pesanan ini? Tindakan ini tidak dapat dibatalkan.')) {
+      removeTransaction(orderId);
+    }
   };
 
   const firstName = user?.name.split(' ')[0] ?? 'Sahabat RasaNusa';
@@ -810,6 +817,16 @@ export default function CustomerDashboard() {
                       Selesai
                     </span>
                   </div>
+                  <button
+                    onClick={() => handleDeleteOrder(order.id)}
+                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 hover:bg-white/10"
+                    style={{ color: 'rgba(243,234,217,0.35)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#E8836C')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(243,234,217,0.35)')}
+                    aria-label="Hapus riwayat pesanan ini"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               ))}
             </div>

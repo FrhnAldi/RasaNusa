@@ -1,4 +1,5 @@
-import { CheckCircle2, Tag } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CheckCircle2, Clock3, Tag } from 'lucide-react';
 import { formatIDR } from '../../data/products';
 
 interface ReviewItem {
@@ -34,6 +35,14 @@ const PAYMENT_LABELS: Record<string, string> = {
   kartu: 'Kartu',
 };
 
+const QRIS_DURATION_SECONDS = 5 * 60;
+
+function formatCountdown(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 export default function OrderSuccessModal({
   orderId,
   items,
@@ -47,6 +56,24 @@ export default function OrderSuccessModal({
   paymentMethod,
   onClose,
 }: Props) {
+  const [secondsLeft, setSecondsLeft] = useState(QRIS_DURATION_SECONDS);
+
+  useEffect(() => {
+    if (paymentMethod !== 'qris') return;
+    const id = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(id);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [paymentMethod]);
+
+  const qrisExpired = paymentMethod === 'qris' && secondsLeft === 0;
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6">
       <style>{`
@@ -175,7 +202,10 @@ export default function OrderSuccessModal({
           {paymentMethod === 'qris' && (
             <div
               className="flex flex-col items-center rounded-2xl px-4 py-5 mb-4"
-              style={{ backgroundColor: 'rgba(243,234,217,0.04)', border: '1px solid rgba(217,163,95,0.25)' }}
+              style={{
+                backgroundColor: 'rgba(243,234,217,0.04)',
+                border: `1px solid ${qrisExpired ? 'rgba(196,67,43,0.35)' : 'rgba(217,163,95,0.25)'}`,
+              }}
             >
               <p
                 className="text-[11px] font-medium uppercase tracking-[0.16em] mb-3"
@@ -184,8 +214,12 @@ export default function OrderSuccessModal({
                 Scan untuk Bayar
               </p>
               <div
-                className="rounded-xl p-2.5"
-                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 0 24px rgba(217,163,95,0.15)' }}
+                className="rounded-xl p-2.5 transition-opacity duration-500"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 0 24px rgba(217,163,95,0.15)',
+                  opacity: qrisExpired ? 0.35 : 1,
+                }}
               >
                 <img
                   src={`${import.meta.env.BASE_URL}qris.png`}
@@ -193,11 +227,36 @@ export default function OrderSuccessModal({
                   className="w-44 h-44 object-contain block"
                 />
               </div>
+
+              <div className="flex items-center gap-1.5 mt-3.5">
+                <Clock3 size={13} style={{ color: qrisExpired ? '#E8836C' : GOLD }} />
+                <span
+                  className="text-xs font-semibold"
+                  style={{ color: qrisExpired ? '#E8836C' : GOLD, fontFamily: 'Inter, sans-serif' }}
+                >
+                  {qrisExpired ? 'Waktu pembayaran habis' : `Selesaikan dalam ${formatCountdown(secondsLeft)}`}
+                </span>
+              </div>
+              <div
+                className="w-full max-w-[176px] h-1 rounded-full mt-2.5 overflow-hidden"
+                style={{ backgroundColor: 'rgba(243,234,217,0.1)' }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-1000 ease-linear"
+                  style={{
+                    width: `${(secondsLeft / QRIS_DURATION_SECONDS) * 100}%`,
+                    background: qrisExpired ? '#E8836C' : GRADIENT,
+                  }}
+                />
+              </div>
+
               <p
                 className="text-[11px] mt-3 font-light text-center leading-relaxed"
                 style={{ color: MUTED, fontFamily: 'Inter, sans-serif' }}
               >
-                Buka aplikasi e-wallet atau m-banking Anda, lalu scan kode di atas untuk menyelesaikan pembayaran.
+                {qrisExpired
+                  ? 'Kode QRIS sudah kedaluwarsa. Silakan hubungi kasir untuk membuat ulang kode pembayaran.'
+                  : 'Buka aplikasi e-wallet atau m-banking Anda, lalu scan kode di atas untuk menyelesaikan pembayaran.'}
               </p>
             </div>
           )}
@@ -254,11 +313,12 @@ export default function OrderSuccessModal({
             </span>
           </div>
 
-          // SESUDAH
           <p className="text-[11px] mb-4 font-light text-center" style={{ color: 'rgba(243,234,217,0.4)', fontFamily: 'Inter, sans-serif' }}>
-            {paymentMethod === 'qris'
-              ? 'Setelah pembayaran QRIS berhasil, tunjukkan halaman ini ke kasir sebagai bukti.'
-              : 'Tunjukkan halaman ini ke kasir untuk konfirmasi pembayaran.'}
+            {qrisExpired
+              ? 'Kode QRIS kedaluwarsa — tunjukkan halaman ini ke kasir untuk membuat ulang pembayaran.'
+              : paymentMethod === 'qris'
+                ? 'Setelah pembayaran QRIS berhasil, tunjukkan halaman ini ke kasir sebagai bukti.'
+                : 'Tunjukkan halaman ini ke kasir untuk konfirmasi pembayaran.'}
           </p>
 
           <button

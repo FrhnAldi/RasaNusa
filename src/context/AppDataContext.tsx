@@ -46,6 +46,7 @@ interface AppDataContextValue {
   addProduct: (input: NewProductInput) => void;
   updateProduct: (id: string, patch: Partial<Omit<Product, 'id'>>) => void;
   removeProduct: (id: string) => void;
+  removeTransaction: (id: string) => void;
   resetData: () => void;
 }
 
@@ -166,6 +167,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, products: prev.products.filter((p) => p.id !== id) }));
   };
 
+  const removeTransaction = (id: string) => {
+    setState((prev) => ({ ...prev, transactions: prev.transactions.filter((t) => t.id !== id) }));
+  };
+
   const resetData = () => {
     setState({ products: INITIAL_PRODUCTS, transactions: [], stockLogs: [] });
   };
@@ -181,6 +186,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         addProduct,
         updateProduct,
         removeProduct,
+        removeTransaction,
         resetData,
       }}
     >
