@@ -25,12 +25,16 @@ export default function StockTab({ products }: { products: Product[] }) {
   const [formState, setFormState] = useState<{ mode: 'add' | 'edit'; product?: Product } | null>(null);
 
   const filtered = useMemo(() => {
+    // `products` is already ordered newest-first (new menu items are prepended
+    // in AppDataContext), so we keep that order here instead of re-sorting
+    // alphabetically — that way a newly added menu appears at the top, not
+    // scattered wherever its name falls alphabetically.
     let list = tab === 'semua' ? products : products.filter((p) => p.category === tab);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(q));
     }
-    return [...list].sort((a, b) => a.name.localeCompare(b.name));
+    return list;
   }, [products, tab, query]);
 
   const getAmount = (id: string) => amounts[id] ?? 1;

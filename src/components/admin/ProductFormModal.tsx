@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { ChevronDown, Utensils, X } from 'lucide-react';
+import { useRef, useState } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
+import { ChevronDown, ImagePlus, Utensils, X } from 'lucide-react';
 import type { Category, Product } from '../../types/pos';
 import { useAppData } from '../../context/AppDataContext';
 
@@ -55,6 +55,29 @@ export default function ProductFormModal({ mode, product, onClose }: Props) {
   const [stock, setStock] = useState(String(product?.stock ?? ''));
   const [image, setImage] = useState(product?.image ?? '');
   const [description, setDescription] = useState(product?.description ?? '');
+  const [imageError, setImageError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setImageError('File harus berupa gambar (PNG, JPG, atau WEBP).');
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setImageError('Ukuran gambar maksimal 3MB.');
+      return;
+    }
+
+    setImageError('');
+    const reader = new FileReader();
+    reader.onload = () => setImage(reader.result as string);
+    reader.onerror = () => setImageError('Gagal membaca gambar, coba lagi.');
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -196,16 +219,65 @@ export default function ProductFormModal({ mode, product, onClose }: Props) {
             </Field>
           </div>
 
-          <Field label="URL Gambar">
+          <Field label="Gambar Menu">
             <input
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              required
-              placeholder="https://..."
-              style={fieldStyle}
-              onFocus={focusGold}
-              onBlur={blurGold}
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
             />
+            {image ? (
+              <div className="flex flex-col gap-2">
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(217,163,95,0.2)' }}>
+                  <img src={image} alt="Preview gambar menu" className="w-full h-36 object-cover" />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 text-xs font-semibold py-2 rounded-lg transition-colors duration-300"
+                    style={{
+                      backgroundColor: 'rgba(217,163,95,0.12)',
+                      color: GOLD,
+                      border: '1px solid rgba(217,163,95,0.3)',
+                    }}
+                  >
+                    Ganti Gambar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImage('')}
+                    className="text-xs font-semibold px-3 py-2 rounded-lg transition-colors duration-300"
+                    style={{
+                      backgroundColor: 'rgba(196,67,43,0.12)',
+                      color: '#E8836C',
+                      border: '1px solid rgba(196,67,43,0.25)',
+                    }}
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex flex-col items-center justify-center gap-1.5 py-7 rounded-xl transition-colors duration-300"
+                style={{ border: '1px dashed rgba(217,163,95,0.35)', backgroundColor: '#121212', color: MUTED }}
+              >
+                <ImagePlus size={20} style={{ color: GOLD }} />
+                <span className="text-xs font-medium">Klik untuk upload gambar</span>
+                <span className="text-[10px]" style={{ color: 'rgba(243,234,217,0.35)' }}>
+                  PNG, JPG, atau WEBP · maks 3MB
+                </span>
+              </button>
+            )}
+            {imageError && (
+              <span className="text-[11px] font-medium" style={{ color: '#E8836C' }}>
+                {imageError}
+              </span>
+            )}
           </Field>
 
           <Field label="Deskripsi">
