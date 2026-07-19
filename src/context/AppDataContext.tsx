@@ -43,7 +43,7 @@ interface AppDataContextValue {
   stockLogs: StockLog[];
   recordTransaction: (input: RecordTransactionInput) => void;
   adjustStock: (productId: string, delta: number, reason: string, actorName: string) => void;
-  addProduct: (input: NewProductInput) => void;
+  addProduct: (input: NewProductInput) => string;
   updateProduct: (id: string, patch: Partial<Omit<Product, 'id'>>) => void;
   removeProduct: (id: string) => void;
   removeTransaction: (id: string) => void;
@@ -139,8 +139,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   };
 
   const addProduct = (input: NewProductInput) => {
+    const id = `${input.category.slice(0, 2)}-${Date.now()}`;
     setState((prev) => {
-      const id = `${input.category.slice(0, 2)}-${Date.now()}`;
       const product: Product = { id, ...input };
       const log: StockLog = {
         id: `LOG-${Date.now()}`,
@@ -154,6 +154,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       };
       return { ...prev, products: [product, ...prev.products], stockLogs: [log, ...prev.stockLogs] };
     });
+    return id;
   };
 
   const updateProduct = (id: string, patch: Partial<Omit<Product, 'id'>>) => {
